@@ -1,0 +1,71 @@
+# =========================
+# .NET
+# =========================
+
+bin/
+obj/
+
+.vs/
+
+# User specific files
+*.user
+*.suo
+
+
+# =========================
+# Angular / Node
+# =========================
+
+node_modules/
+
+dist/
+
+.angular/
+
+npm-debug.log*
+
+
+# =========================
+# Secrets / Configuration
+# =========================
+
+.env
+.env.*
+
+appsettings.Development.json
+appsettings.Production.json
+
+secrets.json
+
+
+# =========================
+# Logs
+# =========================
+
+*.log
+
+
+# =========================
+# Database Files
+# =========================
+
+*.mdf
+*.ldf
+*.sqlite
+*.db
+
+
+# =========================
+# IDE Files
+# =========================
+
+.idea/
+.vscode/
+
+
+# =========================
+# OS Files
+# =========================
+
+.DS_Store
+Thumbs.db
