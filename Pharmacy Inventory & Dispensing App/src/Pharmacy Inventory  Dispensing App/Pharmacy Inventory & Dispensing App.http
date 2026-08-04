@@ -1,0 +1,6 @@
+@Pharmacy_Inventory___Dispensing_App_HostAddress = http://localhost:5169
+
+GET {{Pharmacy_Inventory___Dispensing_App_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
