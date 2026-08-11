@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Pharmacy_Inventory__Dispensing_App</RootNamespace>
+    <RootNamespace>PharmacyInventoryDispensingSystem.WebApi</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

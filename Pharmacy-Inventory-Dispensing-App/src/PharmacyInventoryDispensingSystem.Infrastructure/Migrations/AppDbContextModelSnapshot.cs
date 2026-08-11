@@ -58,7 +58,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
 
                     b.HasIndex("PrescriptionId");
 
-                    b.ToTable("Dispenses");
+                    b.ToTable("Dispenses", (string)null);
                 });
 
             modelBuilder.Entity("PharmacyInventoryDispensingSystem.Domain.Entities.DispenseItem", b =>
@@ -99,7 +99,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
 
                     b.HasIndex("PrescriptionItemId");
 
-                    b.ToTable("DispenseItems");
+                    b.ToTable("DispenseItems", (string)null);
                 });
 
             modelBuilder.Entity("PharmacyInventoryDispensingSystem.Domain.Entities.Medicine", b =>
@@ -288,7 +288,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
                     b.HasIndex("PrescriptionNumber")
                         .IsUnique();
 
-                    b.ToTable("Prescriptions");
+                    b.ToTable("Prescriptions", (string)null);
                 });
 
             modelBuilder.Entity("PharmacyInventoryDispensingSystem.Domain.Entities.PrescriptionItem", b =>
@@ -332,7 +332,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
 
                     b.HasIndex("PrescriptionId");
 
-                    b.ToTable("PrescriptionItems");
+                    b.ToTable("PrescriptionItems", (string)null);
                 });
 
             modelBuilder.Entity("PharmacyInventoryDispensingSystem.Domain.Entities.StockMovement", b =>
