@@ -1,9 +1,10 @@
 using PharmacyInventoryDispensingSystem.Domain.Common;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 using System.ComponentModel.DataAnnotations;
 
-namespace PharmacyInventoryDispensingSystem.Domain.Entities;
+namespace PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 
-public class Dispense : BaseAuditableEntity
+public class Dispense : AuditableEntity
 {
    
 

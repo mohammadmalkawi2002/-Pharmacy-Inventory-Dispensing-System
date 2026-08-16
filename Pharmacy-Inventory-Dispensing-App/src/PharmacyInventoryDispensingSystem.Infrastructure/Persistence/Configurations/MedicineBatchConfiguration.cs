@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PharmacyInventoryDispensingSystem.Domain.Entities;
+using Microsoft.EntityFrameworkCore.Storage;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Batches;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,7 +28,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
                 .HasForeignKey(di => di.MedicineBatchId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(b=>b.StockMovements)
+            builder.HasMany(b=>b.StockMovemente)
                 .WithOne(sm => sm.MedicineBatch)
                 .HasForeignKey(sm => sm.MedicineBatchId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -38,6 +39,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
 
             //Query Filter:
             builder.HasQueryFilter(b => !b.IsDeleted);
+            
 
             builder.HasIndex(b => new { b.MedicineId, b.BatchNumber }).IsUnique();
             

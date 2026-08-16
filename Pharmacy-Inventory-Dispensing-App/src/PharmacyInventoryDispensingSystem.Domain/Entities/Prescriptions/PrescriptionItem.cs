@@ -1,9 +1,11 @@
 using PharmacyInventoryDispensingSystem.Domain.Common;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 using System.ComponentModel.DataAnnotations;
 
-namespace PharmacyInventoryDispensingSystem.Domain.Entities;
+namespace PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 
-public class PrescriptionItem:BaseAuditableEntity
+public class PrescriptionItem:AuditableEntity
 {
 
 
@@ -11,9 +13,9 @@ public class PrescriptionItem:BaseAuditableEntity
 
     public Guid MedicineId { get; set; }
 
-    public int QuantityPrescribed { get; set; }
+    public int QuantityPrescribed { get; set; }//3 
 
-    public int QuantityDispensed { get; set; } 
+    public int QuantityDispensed { get; set; } //1
 
     public string? DosageInstructions { get; set; }
 
@@ -23,7 +25,7 @@ public class PrescriptionItem:BaseAuditableEntity
 
     public ICollection<DispenseItem> DispenseItems { get; set; } = [];
 
-    public int RemainingQuantity => QuantityPrescribed - QuantityDispensed;
+    public int RemainingQuantity => QuantityPrescribed - QuantityDispensed; 
 
     public bool CanDispense(int requestedQuantity) =>
         requestedQuantity > 0 && requestedQuantity <= RemainingQuantity;

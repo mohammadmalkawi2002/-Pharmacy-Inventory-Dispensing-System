@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PharmacyInventoryDispensingSystem.Domain.Entities;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
 using System;
 using System.Collections.Generic;

@@ -1,5 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PharmacyInventoryDispensingSystem.Domain.Entities;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Batches;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
+using PharmacyInventoryDispensingSystem.Domain.Entities.StockMovements;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations;
 
 namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;

@@ -1,9 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositories;
+using System.Text;
 
 namespace PharmacyInventoryDispensingSystem.Infrastructure;
 
@@ -23,8 +26,11 @@ public static class DependencyInjection
         //Register UnitOfWork ==>:
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+        
 
-        return services;
+
+
+            return services;
     }
 }
 

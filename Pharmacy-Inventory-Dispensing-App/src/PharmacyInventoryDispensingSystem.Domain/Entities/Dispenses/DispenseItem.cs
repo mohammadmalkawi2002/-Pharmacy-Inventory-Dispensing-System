@@ -1,8 +1,10 @@
 using PharmacyInventoryDispensingSystem.Domain.Common;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Batches;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 
-namespace PharmacyInventoryDispensingSystem.Domain.Entities;
+namespace PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 
-public class DispenseItem:BaseAuditableEntity
+public class DispenseItem:AuditableEntity
 {
 
   

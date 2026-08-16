@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PharmacyInventoryDispensingSystem.Domain.Entities;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -24,19 +24,20 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
                 .IsRequired()
                 .HasMaxLength(50);
 
-            
+
             builder.Property(m => m.Strength)
                 .IsRequired()
                 .HasMaxLength(50);
 
 
             builder.Property(m => m.Form)
-               .IsRequired(required: false)
-                .HasMaxLength(50);
-
-           builder.Property(m=>m.Unit)
                 .IsRequired()
-                .HasMaxLength(20);
+                .HasConversion<int>();
+
+
+            builder.Property(m => m.Unit)
+                 .IsRequired()
+                 .HasMaxLength(20);
 
 
             builder.Property(m => m.ReorderLevel)
@@ -47,21 +48,29 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
                 .HasDefaultValue(true);
 
 
-            // Relationships
+            
 
-            // One Medicine has many Batches
             builder.HasMany(m => m.Batches)
-                .WithOne(b => b.Medicine)
-                .HasForeignKey(b => b.MedicineId)
-                .OnDelete(DeleteBehavior.Restrict);
+            .WithOne(b => b.Medicine)
+     .HasForeignKey(b => b.MedicineId)
+     .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Navigation(m => m.Batches)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
 
 
-            // One Medicine can appear in many Prescription Items
             builder.HasMany(m => m.PrescriptionItems)
                 .WithOne(pi => pi.Medicine)
                 .HasForeignKey(pi => pi.MedicineId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Navigation(m => m.PrescriptionItems)
+          .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+
+                
+
+                
 
             //  Indexes:
 

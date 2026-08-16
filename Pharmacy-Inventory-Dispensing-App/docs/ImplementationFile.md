@@ -311,6 +311,7 @@ Apply `HasQueryFilter(e => !e.IsDeleted)` **only** to:
 
 **Do not** apply to: `StockMovement`, `Dispense`, `DispenseItem`, `PrescriptionItem`.
 
+# Remark: back to this section again (Mohammad):
 ### 9.2 Query filter risks and mitigations
 
 | Scenario | Risk | Mitigation |
