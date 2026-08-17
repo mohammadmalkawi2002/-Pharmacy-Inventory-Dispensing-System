@@ -4,7 +4,6 @@ using PharmacyInventoryDispensingSystem.Domain.Entities.Batches;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines.Event;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
-using System.ComponentModel.DataAnnotations;
 
 namespace PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 

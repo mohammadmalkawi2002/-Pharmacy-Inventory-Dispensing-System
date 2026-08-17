@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using PharmacyInventoryDispensingSystem.Application.Common.Authorization;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Infrastructure.Identity;
@@ -24,7 +25,7 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
-        services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+        services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;
                 options.Password.RequiredLength = 8;
@@ -33,6 +34,7 @@ public static class DependencyInjection
                 options.Password.RequireUppercase = true;
                 options.Password.RequireLowercase = true;
             })
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
 
@@ -40,9 +42,9 @@ public static class DependencyInjection
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("AdminOnly", policy => policy.RequireRole(AppRoles.Admin));
-            options.AddPolicy("PharmacistOrAdmin", policy => policy.RequireRole(AppRoles.Pharmacist, AppRoles.Admin));
-            options.AddPolicy("DoctorOrAdmin", policy => policy.RequireRole(AppRoles.Doctor, AppRoles.Admin));
+            options.AddPolicy(Policies.AdminOnly, policy => policy.RequireRole(Roles.Admin));
+            options.AddPolicy(Policies.PharmacistOrAdmin, policy => policy.RequireRole(Roles.Pharmacist, Roles.Admin));
+            options.AddPolicy(Policies.DoctorOrAdmin, policy => policy.RequireRole(Roles.Doctor, Roles.Admin));
         });
 
         services.AddHttpContextAccessor();

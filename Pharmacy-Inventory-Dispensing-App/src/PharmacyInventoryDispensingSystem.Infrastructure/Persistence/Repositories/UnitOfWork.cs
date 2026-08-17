@@ -5,13 +5,6 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositor
 
 public class UnitOfWork(AppDbContext context) : IUnitOfWork
 {
-    public void Dispose()
-    {
-        context.Dispose();
-    }
-
-    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        await context.SaveChangesAsync(cancellationToken);
-    }
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        => context.SaveChangesAsync(cancellationToken);
 }

@@ -2,7 +2,6 @@ using PharmacyInventoryDispensingSystem.Domain.Common;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
-using System.ComponentModel.DataAnnotations;
 
 namespace PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 

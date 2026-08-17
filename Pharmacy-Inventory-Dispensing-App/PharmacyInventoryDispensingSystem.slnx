@@ -1,8 +1,8 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/PharmacyInventoryDispensingSystem.WebApi/PharmacyInventoryDispensingSystem.WebApi.csproj" />
     <Project Path="src/PharmacyInventoryDispensingSystem.Application/PharmacyInventoryDispensingSystem.Application.csproj" />
     <Project Path="src/PharmacyInventoryDispensingSystem.Domain/PharmacyInventoryDispensingSystem.Domain.csproj" />
     <Project Path="src/PharmacyInventoryDispensingSystem.Infrastructure/PharmacyInventoryDispensingSystem.Infrastructure.csproj" />
+    <Project Path="src/PharmacyInventoryDispensingSystem.WebApi/PharmacyInventoryDispensingSystem.WebApi.csproj" />
   </Folder>
 </Solution>

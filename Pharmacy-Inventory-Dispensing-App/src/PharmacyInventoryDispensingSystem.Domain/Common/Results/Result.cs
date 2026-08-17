@@ -1,8 +1,5 @@
 ﻿using PharmacyInventoryDispensingSystem.Domain.Common.Results.Abstractions;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 using System.Text.Json.Serialization;
 
 namespace PharmacyInventoryDispensingSystem.Domain.Common.Results

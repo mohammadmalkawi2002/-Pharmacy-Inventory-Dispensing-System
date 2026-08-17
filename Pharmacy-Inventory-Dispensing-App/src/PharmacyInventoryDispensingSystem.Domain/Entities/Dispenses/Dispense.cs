@@ -5,8 +5,6 @@ namespace PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 
 public class Dispense : AuditableEntity
 {
-   
-
     public Guid PrescriptionId { get; set; }
 
     public string PharmacistId { get; set; } = string.Empty;
@@ -18,4 +16,8 @@ public class Dispense : AuditableEntity
     public Prescription Prescription { get; set; } = null!;
 
     public ICollection<DispenseItem> Items { get; set; } = [];
+
+    public Dispense()
+    {
+    }
 }

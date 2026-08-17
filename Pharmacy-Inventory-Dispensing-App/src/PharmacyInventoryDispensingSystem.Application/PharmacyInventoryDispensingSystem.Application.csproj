@@ -1,23 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <PackageReference Include="MediatR" Version="14.2.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\PharmacyInventoryDispensingSystem.Domain\PharmacyInventoryDispensingSystem.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Common\Behaviours\" />
-    <Folder Include="Features\" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PharmacyInventoryDispensingSystem.Domain\PharmacyInventoryDispensingSystem.Domain.csproj" />
+  </ItemGroup>
 
 </Project>
