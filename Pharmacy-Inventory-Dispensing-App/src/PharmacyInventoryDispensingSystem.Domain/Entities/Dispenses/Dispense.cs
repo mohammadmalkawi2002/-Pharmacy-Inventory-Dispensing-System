@@ -1,6 +1,5 @@
 using PharmacyInventoryDispensingSystem.Domain.Common;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
-using System.ComponentModel.DataAnnotations;
 
 namespace PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 
@@ -10,7 +9,7 @@ public class Dispense : AuditableEntity
 
     public Guid PrescriptionId { get; set; }
 
-    public string PharmacistId { get; set; }
+    public string PharmacistId { get; set; } = string.Empty;
 
     public DateTimeOffset DispensedAt { get; set; }
 

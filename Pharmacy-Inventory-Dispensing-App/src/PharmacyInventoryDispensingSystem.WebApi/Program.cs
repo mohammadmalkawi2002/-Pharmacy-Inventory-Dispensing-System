@@ -1,9 +1,5 @@
 using PharmacyInventoryDispensingSystem.Application;
-using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
-using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Infrastructure;
-using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,12 +7,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 
-
 var app = builder.Build();
+
+await app.Services.InitializeInfrastructureAsync();
 
 if (app.Environment.IsDevelopment())
 {

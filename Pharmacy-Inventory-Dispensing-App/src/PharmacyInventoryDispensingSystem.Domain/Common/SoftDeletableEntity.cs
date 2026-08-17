@@ -17,17 +17,24 @@ public abstract class SoftDeletableEntity: AuditableEntity
     public bool IsDeleted { get; set; }
 
     public DateTimeOffset? DeletedAtUtc { get; set; }
-    public DateTimeOffset?RestoreAtUtc { get; set; }
 
-    public void Delete(DateTime deletedAt)
+    public string? DeletedBy { get; set; }
+
+    public DateTimeOffset? RestoreAtUtc { get; set; }
+
+    public void Delete(string? deletedBy, DateTimeOffset? deletedAt = null)
     {
-        DeletedAtUtc = deletedAt;
         IsDeleted = true;
+        DeletedAtUtc = deletedAt ?? DateTimeOffset.UtcNow;
+        DeletedBy = deletedBy;
+        RestoreAtUtc = null;
     }
 
     public void Restore()
     {
-        RestoreAtUtc = DateTime.UtcNow;
         IsDeleted = false;
+        RestoreAtUtc = DateTimeOffset.UtcNow;
+        DeletedAtUtc = null;
+        DeletedBy = null;
     }
 }
