@@ -52,18 +52,37 @@ public static class DependencyInjection
         services.AddScoped<ITokenProvider, JwtTokenProvider>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        return services;
-    }
 
-    public static async Task InitializeInfrastructureAsync(
-        this IServiceProvider services,
-        CancellationToken cancellationToken = default)
-    {
-        using var scope = services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await context.Database.MigrateAsync(cancellationToken);
-        await DatabaseSeeder.SeedAsync(scope.ServiceProvider, cancellationToken);
-    }
+        //Register Identity:
+        services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+        {
+            //Password Rules:
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = 8;
+
+            //Lockout settings :
+
+            options.Lockout.MaxFailedAccessAttempts = 5; //N=5
+            options.Lockout.AllowedForNewUsers = true;
+            //يستمر حظر 15 دقيقة:
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+
+            //User requirements :
+
+            //This means each email must be unique in the system:
+            options.User.RequireUniqueEmail = true;
+            options.SignIn.RequireConfirmedEmail = false;
+
+
+
+
+        })
+        .AddEntityFrameworkStores<AppDbContext>()
+        .AddDefaultTokenProviders();
+
 
     private static void ConfigureJwt(IServiceCollection services, IConfiguration configuration)
     {
@@ -83,24 +102,6 @@ public static class DependencyInjection
         var issuer = configuration["Jwt:Issuer"];
         var audience = configuration["Jwt:Audience"];
 
-        services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = issuer,
-                    ValidAudience = audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-                    ClockSkew = TimeSpan.FromMinutes(1)
-                };
-            });
+        return services;
     }
 }
