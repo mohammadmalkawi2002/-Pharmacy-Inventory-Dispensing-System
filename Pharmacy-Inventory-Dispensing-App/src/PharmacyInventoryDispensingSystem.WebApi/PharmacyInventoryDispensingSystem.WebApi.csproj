@@ -21,8 +21,5 @@
     <ProjectReference Include="..\PharmacyInventoryDispensingSystem.Infrastructure\PharmacyInventoryDispensingSystem.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
 
 </Project>

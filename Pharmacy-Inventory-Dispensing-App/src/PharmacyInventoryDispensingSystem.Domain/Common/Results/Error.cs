@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PharmacyInventoryDispensingSystem.Domain.Common.Results
+﻿namespace PharmacyInventoryDispensingSystem.Domain.Common.Results
 {
     public readonly record struct Error 
     {

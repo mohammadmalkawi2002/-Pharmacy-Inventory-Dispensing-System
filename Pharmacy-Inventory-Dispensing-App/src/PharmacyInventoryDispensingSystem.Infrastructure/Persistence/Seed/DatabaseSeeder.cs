@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using PharmacyInventoryDispensingSystem.Application.Common.Authorization;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Batches;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
@@ -31,7 +32,7 @@ internal static class DatabaseSeeder
 
     private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
     {
-        foreach (var roleName in AppRoles.All)
+        foreach (var roleName in Roles.All)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
@@ -48,21 +49,21 @@ internal static class DatabaseSeeder
             email: AdminEmail,
             fullName: "System Administrator",
             password: AdminPassword,
-            role: AppRoles.Admin);
+            role: Roles.Admin);
 
         var pharmacist = await EnsureUserAsync(
             userManager,
             email: PharmacistEmail,
             fullName: "Default Pharmacist",
             password: DefaultPassword,
-            role: AppRoles.Pharmacist);
+            role: Roles.Pharmacist);
 
         var doctor = await EnsureUserAsync(
             userManager,
             email: DoctorEmail,
             fullName: "Default Doctor",
             password: DefaultPassword,
-            role: AppRoles.Doctor);
+            role: Roles.Doctor);
 
         return (admin, pharmacist, doctor);
     }

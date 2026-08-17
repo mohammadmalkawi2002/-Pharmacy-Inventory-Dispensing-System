@@ -4,11 +4,8 @@ using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 
 namespace PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 
-public class DispenseItem:AuditableEntity
+public class DispenseItem : AuditableEntity
 {
-
-  
-
     public Guid DispenseId { get; set; }
 
     public Guid PrescriptionItemId { get; set; }
@@ -22,4 +19,8 @@ public class DispenseItem:AuditableEntity
     public PrescriptionItem PrescriptionItem { get; set; } = null!;
 
     public MedicineBatch MedicineBatch { get; set; } = null!;
+
+    public DispenseItem()
+    {
+    }
 }

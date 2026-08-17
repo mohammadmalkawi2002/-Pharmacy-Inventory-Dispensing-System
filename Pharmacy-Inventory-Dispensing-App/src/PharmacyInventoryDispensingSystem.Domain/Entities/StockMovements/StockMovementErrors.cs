@@ -1,7 +1,4 @@
 ﻿using PharmacyInventoryDispensingSystem.Domain.Common.Results;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace PharmacyInventoryDispensingSystem.Domain.Entities.StockMovements
 {
