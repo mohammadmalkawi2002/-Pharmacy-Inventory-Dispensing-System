@@ -1,21 +1,17 @@
 ﻿using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositories
+namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositories;
+
+public class UnitOfWork(AppDbContext context) : IUnitOfWork
 {
-    public class UnitOfWork(AppDbContext context) : IUnitOfWork
+    public void Dispose()
     {
-        public void Dispose()
-        {
-            context.Dispose();
-        }
+        context.Dispose();
+    }
 
-        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-              await context.SaveChangesAsync();
-        }
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

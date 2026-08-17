@@ -1,25 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations
+namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations;
+
+public class DispenseItemConfiguration : IEntityTypeConfiguration<DispenseItem>
 {
-    public class DispenseItemConfiguration : IEntityTypeConfiguration<DispenseItem>
+    public void Configure(EntityTypeBuilder<DispenseItem> builder)
     {
-        public void Configure(EntityTypeBuilder<DispenseItem> builder)
-        {
-            builder.HasKey(di => di.Id);
+        builder.ToTable("DispenseItems");
+        builder.ConfigureAuditable();
 
+        builder.Property(di => di.DispenseId).IsRequired();
+        builder.Property(di => di.PrescriptionItemId).IsRequired();
+        builder.Property(di => di.MedicineBatchId).IsRequired();
+        builder.Property(di => di.Quantity).IsRequired();
 
-            builder.HasOne(di => di.PrescriptionItem)
-                .WithMany(pi => pi.DispenseItems)
-                .HasForeignKey(di => di.PrescriptionItemId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-          
-        }
+        builder.HasIndex(di => di.DispenseId);
+        builder.HasIndex(di => di.PrescriptionItemId);
+        builder.HasIndex(di => di.MedicineBatchId);
     }
 }

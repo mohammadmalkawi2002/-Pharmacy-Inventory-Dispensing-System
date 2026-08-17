@@ -1,49 +1,55 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Storage;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Batches;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations
+namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations;
+
+public class MedicineBatchConfiguration : IEntityTypeConfiguration<MedicineBatch>
 {
-    public class MedicineBatchConfiguration : IEntityTypeConfiguration<MedicineBatch>
+    public void Configure(EntityTypeBuilder<MedicineBatch> builder)
     {
-        public void Configure(EntityTypeBuilder<MedicineBatch> builder)
+        builder.ToTable("MedicineBatches", table =>
         {
-            builder.HasKey(b => b.Id);
-            builder.ToTable("MedicineBatches", table => 
-            { 
-                table.HasCheckConstraint("CK_MedicineBatch_QuantityInStock_NonNegative",
-                         "[QuantityInStock] >= 0");
-            });
-            builder.Property(b => b.MedicineId).IsRequired();
-            builder.Property(b => b.BatchNumber).IsRequired().HasMaxLength(50);
-            builder.Property(b => b.QuantityInStock).HasDefaultValue(0);
+            table.HasCheckConstraint(
+                "CK_MedicineBatch_QuantityInStock_NonNegative",
+                "[QuantityInStock] >= 0");
+        });
 
-            // Relationships:
-            builder.HasMany(b=>b.DispenseItems)
-                .WithOne(di => di.MedicineBatch)
-                .HasForeignKey(di => di.MedicineBatchId)
-                .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureSoftDeletable();
 
-            builder.HasMany(b=>b.StockMovemente)
-                .WithOne(sm => sm.MedicineBatch)
-                .HasForeignKey(sm => sm.MedicineBatchId)
-                .OnDelete(DeleteBehavior.Restrict);
+        builder.Property(b => b.MedicineId).IsRequired();
 
-           
+        builder.Property(b => b.BatchNumber)
+            .IsRequired()
+            .HasMaxLength(50);
 
+        builder.Property(b => b.ExpiryDate).IsRequired();
 
+        builder.Property(b => b.QuantityInStock)
+            .IsRequired()
+            .HasDefaultValue(0);
 
-            //Query Filter:
-            builder.HasQueryFilter(b => !b.IsDeleted);
-            
+        builder.Property(b => b.ReceivedAt).IsRequired();
 
-            builder.HasIndex(b => new { b.MedicineId, b.BatchNumber }).IsUnique();
-            
+        builder.HasMany(b => b.StockMovements)
+            .WithOne(sm => sm.MedicineBatch)
+            .HasForeignKey(sm => sm.MedicineBatchId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired();
 
-        }
+        builder.Navigation(b => b.StockMovements)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(b => b.DispenseItems)
+            .WithOne(di => di.MedicineBatch)
+            .HasForeignKey(di => di.MedicineBatchId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired();
+
+        builder.Navigation(b => b.DispenseItems)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasIndex(b => new { b.MedicineId, b.BatchNumber }).IsUnique();
+        builder.HasIndex(b => new { b.MedicineId, b.ExpiryDate, b.ReceivedAt });
     }
 }

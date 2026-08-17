@@ -1,31 +1,34 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations
+namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations;
+
+public class DispenseConfiguration : IEntityTypeConfiguration<Dispense>
 {
-    public class DispenseConfiguration : IEntityTypeConfiguration<Dispense>
+    public void Configure(EntityTypeBuilder<Dispense> builder)
     {
-        public void Configure(EntityTypeBuilder<Dispense> builder)
-        {
-            builder.HasKey(d => d.Id);
-          //  builder.Property(d => d.PharmacistId).IsRequired().HasMaxLength(100);
+        builder.ToTable("Dispenses");
+        builder.ConfigureAuditable();
 
-            builder.Property(d=>d.Notes).IsRequired(false).HasMaxLength(300);
+        builder.Property(d => d.PrescriptionId).IsRequired();
 
+        builder.Property(d => d.PharmacistId)
+            .IsRequired()
+            .HasMaxLength(450);
 
+        builder.Property(d => d.DispensedAt).IsRequired();
 
-           builder.HasMany(d=>d.Items)
-                .WithOne(di=>di.Dispense)
-                .HasForeignKey(di => di.DispenseId)
-                .OnDelete(DeleteBehavior.Restrict);
+        builder.Property(d => d.Notes)
+            .IsRequired(false)
+            .HasMaxLength(300);
 
+        builder.HasMany(d => d.Items)
+            .WithOne(di => di.Dispense)
+            .HasForeignKey(di => di.DispenseId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired();
 
-
-
-        }
+        builder.HasIndex(d => new { d.PrescriptionId, d.DispensedAt });
     }
 }

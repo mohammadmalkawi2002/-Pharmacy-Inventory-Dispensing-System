@@ -1,97 +1,63 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
 
-namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations
+namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations;
+
+public class MedicineConfiguration : IEntityTypeConfiguration<Medicine>
 {
-    public class MedicineConfiguration : IEntityTypeConfiguration<Medicine>
+    public void Configure(EntityTypeBuilder<Medicine> builder)
     {
-        public void Configure(EntityTypeBuilder<Medicine> builder)
-        {
-            builder.HasKey(m => m.Id);
+        builder.ToTable("Medicines");
+        builder.ConfigureSoftDeletable();
 
-            builder.ToTable("Medicines");
+        builder.Property(m => m.Code)
+            .IsRequired()
+            .HasMaxLength(50);
 
-            builder.Property(m => m.Name)
-                .IsRequired()
-                .HasMaxLength(100);
+        builder.Property(m => m.Name)
+            .IsRequired()
+            .HasMaxLength(100);
 
-            builder.Property(m => m.Code)
-                .IsRequired()
-                .HasMaxLength(50);
+        builder.Property(m => m.Strength)
+            .IsRequired()
+            .HasMaxLength(50);
 
+        builder.Property(m => m.Form)
+            .IsRequired()
+            .HasConversion<int>();
 
-            builder.Property(m => m.Strength)
-                .IsRequired()
-                .HasMaxLength(50);
+        builder.Property(m => m.Unit)
+            .IsRequired()
+            .HasMaxLength(20);
 
+        builder.Property(m => m.ReorderLevel)
+            .IsRequired();
 
-            builder.Property(m => m.Form)
-                .IsRequired()
-                .HasConversion<int>();
+        builder.Property(m => m.IsActive)
+            .IsRequired()
+            .HasDefaultValue(true);
 
-
-            builder.Property(m => m.Unit)
-                 .IsRequired()
-                 .HasMaxLength(20);
-
-
-            builder.Property(m => m.ReorderLevel)
-                .IsRequired();
-
-
-            builder.Property(m => m.IsActive)
-                .HasDefaultValue(true);
-
-
-            
-
-            builder.HasMany(m => m.Batches)
+        builder.HasMany(m => m.Batches)
             .WithOne(b => b.Medicine)
-     .HasForeignKey(b => b.MedicineId)
-     .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(b => b.MedicineId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired();
 
-            builder.Navigation(m => m.Batches)
-                .UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(m => m.Batches)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        builder.HasMany(m => m.PrescriptionItems)
+            .WithOne(pi => pi.Medicine)
+            .HasForeignKey(pi => pi.MedicineId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired();
 
-            builder.HasMany(m => m.PrescriptionItems)
-                .WithOne(pi => pi.Medicine)
-                .HasForeignKey(pi => pi.MedicineId)
-                .OnDelete(DeleteBehavior.Restrict);
+        builder.Navigation(m => m.PrescriptionItems)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-            builder.Navigation(m => m.PrescriptionItems)
-          .UsePropertyAccessMode(PropertyAccessMode.Field);
-
-
-                
-
-                
-
-            //  Indexes:
-
-            builder.HasIndex(m => m.Code)
-                .IsUnique();
-            // Useful for searching medicines by name
-            builder.HasIndex(m => m.Name);
-
-            //another option is to create a composite index:
-            // builder.HasIndex(m => new { m.Name, m.IsActive });
-
-
-            //QueryFilter: 
-            builder.HasQueryFilter(m =>! m.IsDeleted);
-
-
-
-
-            
-            
-
-        }
+        builder.HasIndex(m => m.Code).IsUnique();
+        builder.HasIndex(m => m.Name);
+        builder.HasIndex(m => m.IsActive);
     }
 }
