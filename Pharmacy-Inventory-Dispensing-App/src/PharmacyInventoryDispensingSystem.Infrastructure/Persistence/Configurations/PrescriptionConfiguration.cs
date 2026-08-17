@@ -1,69 +1,64 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
-using PharmacyInventoryDispensingSystem.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations
+namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configurations;
+
+public class PrescriptionConfiguration : IEntityTypeConfiguration<Prescription>
 {
-    public class PrescriptionConfiguration : IEntityTypeConfiguration<Prescription>
+    public void Configure(EntityTypeBuilder<Prescription> builder)
     {
-        public void Configure(EntityTypeBuilder<Prescription> builder)
-        {
-            builder.HasKey(p=>p.Id);
+        builder.ToTable("Prescriptions");
+        builder.ConfigureSoftDeletable();
 
-            builder.Property(p => p.PrescriptionNumber)
-                .IsRequired()
-                .HasMaxLength(50);
+        builder.Property(p => p.PrescriptionNumber)
+            .IsRequired()
+            .HasMaxLength(50);
 
-            
+        builder.Property(p => p.PatientName)
+            .IsRequired()
+            .HasMaxLength(100);
 
-            builder.Property(p=>p.PatientName)
-                .IsRequired()
-                .HasMaxLength (100);
+        builder.Property(p => p.PatientPhone)
+            .IsRequired(false)
+            .HasMaxLength(20);
 
-            builder.Property(p => p.PatientPhone)
-                .IsRequired(false)
-                .HasMaxLength(20);
+        builder.Property(p => p.DoctorId)
+            .IsRequired()
+            .HasMaxLength(450);
 
-            builder.Property(p=>p.Notes)
-                .IsRequired(false)
-                .HasMaxLength(300);
+        builder.Property(p => p.ValidFrom).IsRequired();
+        builder.Property(p => p.ValidTo).IsRequired();
+        builder.Property(p => p.MaxRefills).IsRequired();
+        builder.Property(p => p.RefillsUsed).IsRequired();
 
-            builder.Property(p => p.ValidFrom)
-                .IsRequired();
+        builder.Property(p => p.Status)
+            .IsRequired()
+            .HasConversion<int>();
 
-            builder.Property(p => p.ValidTo)
-                .IsRequired();
+        builder.Property(p => p.Notes)
+            .IsRequired(false)
+            .HasMaxLength(300);
 
+        builder.HasMany(p => p.Items)
+            .WithOne(i => i.Prescription)
+            .HasForeignKey(i => i.PrescriptionId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired();
 
-            //Relationships:
-            builder.HasMany(p => p.Items)
-                .WithOne(i => i.Prescription)
-                .HasForeignKey(i => i.PrescriptionId)
-                .OnDelete(DeleteBehavior.Restrict);
+        builder.Navigation(p => p.Items)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-            builder.HasMany(p=>p.Dispenses)
-                .WithOne(di => di.Prescription)
-                .HasForeignKey(di => di.PrescriptionId)
-                .OnDelete(DeleteBehavior.Restrict);
+        builder.HasMany(p => p.Dispenses)
+            .WithOne(d => d.Prescription)
+            .HasForeignKey(d => d.PrescriptionId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired();
 
-            //index:
-            builder.HasIndex(p=>p.PrescriptionNumber).IsUnique();
-           // builder.HasIndex(p => new { p.Status, p.ValidTo, p.PatientPhone });
+        builder.Navigation(p => p.Dispenses)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-            //Qyery filter: 
-            builder.HasQueryFilter(p => !p.IsDeleted);
-
-
-
-
-
-
-
-
-        }
+        builder.HasIndex(p => p.PrescriptionNumber).IsUnique();
+        builder.HasIndex(p => new { p.Status, p.ValidTo });
     }
 }

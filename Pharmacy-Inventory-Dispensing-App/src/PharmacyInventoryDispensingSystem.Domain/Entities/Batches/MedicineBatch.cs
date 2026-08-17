@@ -4,7 +4,6 @@ using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 using PharmacyInventoryDispensingSystem.Domain.Entities.StockMovements;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
-using System.ComponentModel.DataAnnotations;
 
 namespace PharmacyInventoryDispensingSystem.Domain.Entities.Batches;
 
@@ -96,9 +95,11 @@ public class MedicineBatch : SoftDeletableEntity
     /// Add to an exisiting batch medicines
     /// </summary>
     /// <returns></returns>
-    public static Result<Updated> Receive() 
+    public static Result<Updated> Receive()
     {
-    
+        return Error.Unexpected(
+            "Batch.Receive.NotImplemented",
+            "Receiving additional stock into an existing batch is not implemented.");
     }
 
 
@@ -141,7 +142,17 @@ public class MedicineBatch : SoftDeletableEntity
         if (string.IsNullOrWhiteSpace(reason))
             return MedicineBatchErrors.AdjustmentReasonRequired;
 
-        var movemnetResult=StockMovement.Create(Id,MovementType.Adjustment, quantityChange, reason);
+        var newQuantity = QuantityInStock + quantityChange;
+        if (newQuantity < 0)
+            return MedicineBatchErrors.InsufficientStock(Id, Math.Abs(quantityChange), QuantityInStock);
+
+        var movementResult = StockMovement.Create(Id, MovementType.Adjustment, quantityChange, reason);
+        if (movementResult.IsError)
+            return movementResult.Errors;
+
+        QuantityInStock = newQuantity;
+        _stockMovements.Add(movementResult.Value);
+        return movementResult.Value;
     }
 
     public bool IsExpired(DateTime asOf) => ExpiryDate.Date < asOf.Date;

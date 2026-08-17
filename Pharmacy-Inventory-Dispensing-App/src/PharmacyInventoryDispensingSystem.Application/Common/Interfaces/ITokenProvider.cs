@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
 
-namespace PharmacyInventoryDispensingSystem.Application.Common.Interfaces
+public interface ITokenProvider
 {
-    public interface ITokenProvider
-    {
-        Task GenerateJwtTokenAsync(CancellationToken cancellationToken);
-    }
+    string GenerateAccessToken(string userId, string email, IEnumerable<string> roles);
 }

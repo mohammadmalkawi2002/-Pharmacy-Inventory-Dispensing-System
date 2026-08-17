@@ -2,7 +2,6 @@ using PharmacyInventoryDispensingSystem.Domain.Common;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Batches;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
-using System.ComponentModel.DataAnnotations;
 
 namespace PharmacyInventoryDispensingSystem.Domain.Entities.StockMovements;
 
@@ -30,8 +29,8 @@ public class StockMovement : AuditableEntity
 
 
 
-    private StockMovement(Guid medicineBatchId, MovementType movementType, int quantityChange, string? reason)
-        
+    private StockMovement(Guid id, Guid medicineBatchId, MovementType movementType, int quantityChange, string? reason)
+        : base(id)
     {
         MedicineBatchId = medicineBatchId;
         MovementType = movementType;
@@ -57,7 +56,7 @@ public class StockMovement : AuditableEntity
             return StockMovementErrors.AdjustmentReasonRequired;
 
         var normalizedReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
-        return new StockMovement(medicineBatchId, movementType, quantityChange, normalizedReason);
+        return new StockMovement(Guid.CreateVersion7(), medicineBatchId, movementType, quantityChange, normalizedReason);
     }
 }
 

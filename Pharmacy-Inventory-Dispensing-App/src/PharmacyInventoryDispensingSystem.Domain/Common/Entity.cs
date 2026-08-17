@@ -1,14 +1,11 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace PharmacyInventoryDispensingSystem.Domain.Common;
 
 public abstract class Entity
 {
-    public Guid Id { get; }
+    public Guid Id { get; private set; }
 
     private readonly List<DomainEvent> _domainEvents = [];
 
-    [NotMapped]
     public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly(); 
     
     protected Entity()
@@ -32,6 +29,14 @@ public abstract class Entity
     public void ClearDomainEvents()
     {
         _domainEvents.Clear();
+    }
+
+    public void EnsureId()
+    {
+        if (Id == Guid.Empty)
+        {
+            Id = Guid.CreateVersion7();
+        }
     }
 
 }
