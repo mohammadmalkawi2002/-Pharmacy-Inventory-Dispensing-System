@@ -28,7 +28,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
                 .HasForeignKey(di => di.MedicineBatchId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(b=>b.StockMovemente)
+            builder.HasMany(b=>b.StockMovements)
                 .WithOne(sm => sm.MedicineBatch)
                 .HasForeignKey(sm => sm.MedicineBatchId)
                 .OnDelete(DeleteBehavior.Restrict);

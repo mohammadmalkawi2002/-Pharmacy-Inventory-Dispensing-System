@@ -12,7 +12,7 @@ namespace PharmacyInventoryDispensingSystem.Domain.Entities.Batches;
 public class MedicineBatch : SoftDeletableEntity
 {
 
-  
+
     public Guid MedicineId { get; private set; }
     public Medicine Medicine { get; private set; } = null!;
 
@@ -38,18 +38,18 @@ public class MedicineBatch : SoftDeletableEntity
         // EF Core materialization only.
     }
 
-    private MedicineBatch(Guid id,Guid medicineId, string batchNumber, DateTime expiryDate, int Quantity, DateTimeOffset receivedAt )
-        :base(id)
+    private MedicineBatch(Guid id, Guid medicineId, string batchNumber, DateTime expiryDate, int Quantity, DateTimeOffset receivedAt)
+        : base(id)
     {
         MedicineId = medicineId;
         BatchNumber = batchNumber;
         ExpiryDate = expiryDate.Date;
         QuantityInStock = Quantity;
-        ReceivedAt = receivedAt ;
+        ReceivedAt = receivedAt;
     }
 
     ///Methods for this entity: Create(), Adjust() ,CanAllocate()
-    
+
 
 
     /// <summary>
@@ -58,8 +58,8 @@ public class MedicineBatch : SoftDeletableEntity
     /// </summary>
     /// <returns> Batch result if success  or erros</returns>
     public static Result<MedicineBatch> Create(
-        Guid id, Guid medicineId, string batchNumber, DateTime expiryDate, 
-        int Quantity, DateTimeOffset receivedAt) 
+        Guid id, Guid medicineId, string batchNumber, DateTime expiryDate,
+        int Quantity, DateTimeOffset receivedAt)
     {
         if (id == Guid.Empty)
             return MedicineBatchErrors.MedicineBatchIdRequired;
@@ -73,10 +73,10 @@ public class MedicineBatch : SoftDeletableEntity
         if (expiryDate.Date <= DateTime.UtcNow.Date)
             return MedicineBatchErrors.InValidExpiryDate;
 
-        if(Quantity <=0 )
+        if (Quantity <= 0)
             return MedicineBatchErrors.InitialQuantityInvalid;
 
-        var batch=new MedicineBatch(id, medicineId, batchNumber.Trim(), expiryDate, Quantity,receivedAt);
+        var batch = new MedicineBatch(id, medicineId, batchNumber.Trim(), expiryDate, Quantity, receivedAt);
 
         //create or audit movement:
 
@@ -96,10 +96,10 @@ public class MedicineBatch : SoftDeletableEntity
     /// Add to an exisiting batch medicines
     /// </summary>
     /// <returns></returns>
-    public static Result<Updated> Receive() 
-    {
-    
-    }
+    //public static Result<Updated> Receive() 
+    //{
+
+    //}
 
 
     /// <summary>
@@ -133,22 +133,23 @@ public class MedicineBatch : SoftDeletableEntity
     /// resulting quantity can never go negative (§15 rule 3).
     /// </summary>
     /// 
-    public  Result<StockMovement> Adjust(int quantityChange,string reason) 
-    {
-        if (quantityChange == 0)
-            return MedicineBatchErrors.AdjustmentQuantityZero;
+    //    public  Result<StockMovement> Adjust(int quantityChange,string reason) 
+    //    {
+    //        if (quantityChange == 0)
+    //            return MedicineBatchErrors.AdjustmentQuantityZero;
 
-        if (string.IsNullOrWhiteSpace(reason))
-            return MedicineBatchErrors.AdjustmentReasonRequired;
+    //        if (string.IsNullOrWhiteSpace(reason))
+    //            return MedicineBatchErrors.AdjustmentReasonRequired;
 
-        var movemnetResult=StockMovement.Create(Id,MovementType.Adjustment, quantityChange, reason);
-    }
+    //        var movemnetResult=StockMovement.Create(Id,MovementType.Adjustment, quantityChange, reason);
+    //    }
 
-    public bool IsExpired(DateTime asOf) => ExpiryDate.Date < asOf.Date;
+    //    public bool IsExpired(DateTime asOf) => ExpiryDate.Date < asOf.Date;
 
-        
-    /// Checks if the requested quantity can be allocated from this batch as of a specific date.
-    public bool CanAllocate(int requestedQuantity, DateTime asOf) =>
-        requestedQuantity > 0 && QuantityInStock >= requestedQuantity && !IsExpired(asOf);
 
+    //    /// Checks if the requested quantity can be allocated from this batch as of a specific date.
+    //    public bool CanAllocate(int requestedQuantity, DateTime asOf) =>
+    //        requestedQuantity > 0 && QuantityInStock >= requestedQuantity && !IsExpired(asOf);
+
+    //}
 }
