@@ -11,7 +11,15 @@ namespace PharmacyInventoryDispensingSystem.Domain.Entities.Medicines
             code: "MedicineIdErrors.MedicineIdRequired",
             description: "Medicine Id is  Required");
 
+        public static Error InvalidQuantity =>
+        Error.Validation(
+        "Medicine.InvalidQuantity",
+        "Quantity must be greater than zero.");
 
+        public static Error InsufficientStock =>
+            Error.Conflict(
+                "Medicine.InsufficientStock",
+                "The requested quantity is greater than the available stock.");
         public static Error CodeRequired =>
     Error.Validation(
         code: "Medicine.Code.Required",

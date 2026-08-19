@@ -12,9 +12,18 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
     {
         public void Configure(EntityTypeBuilder<Medicine> builder)
         {
+
+            builder.ToTable("Medicines", table => 
+            {
+                table.HasCheckConstraint(
+                    "CK_Medicines_QuantityInStock_NonNegative",
+                    "[QuantityInStock] >= 0"
+                    );
+                
+            });
+
             builder.HasKey(m => m.Id);
 
-            builder.ToTable("Medicines");
 
             builder.Property(m => m.Name)
                 .IsRequired()
@@ -37,38 +46,30 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
 
             builder.Property(m => m.Unit)
                  .IsRequired()
-                 .HasMaxLength(20);
+                 .HasMaxLength(50);
 
 
             builder.Property(m => m.ReorderLevel)
                 .IsRequired();
 
+            builder.Property(m => m.QuantityInStock)
+                .IsRequired();
+
 
             builder.Property(m => m.IsActive)
+                .IsRequired()
                 .HasDefaultValue(true);
 
 
             
 
-            builder.HasMany(m => m.Batches)
-            .WithOne(b => b.Medicine)
-     .HasForeignKey(b => b.MedicineId)
-     .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Navigation(m => m.Batches)
-                .UsePropertyAccessMode(PropertyAccessMode.Field);
 
 
             builder.HasMany(m => m.PrescriptionItems)
                 .WithOne(pi => pi.Medicine)
                 .HasForeignKey(pi => pi.MedicineId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Navigation(m => m.PrescriptionItems)
-          .UsePropertyAccessMode(PropertyAccessMode.Field);
-
-
-                
+                            
 
                 
 
@@ -79,8 +80,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
             // Useful for searching medicines by name
             builder.HasIndex(m => m.Name);
 
-            //another option is to create a composite index:
-            // builder.HasIndex(m => new { m.Name, m.IsActive });
+            
 
 
             //QueryFilter: 

@@ -7,17 +7,12 @@ public abstract class SoftDeletableEntity: AuditableEntity
     {
         
     }
-
-
-    protected SoftDeletableEntity(Guid id)
-        :base(id)
-    {
-        
-    }
     public bool IsDeleted { get; set; }
 
     public DateTimeOffset? DeletedAtUtc { get; set; }
-    public DateTimeOffset?RestoreAtUtc { get; set; }
+    public DateTimeOffset? RestoredAtUtc { get; set; }
+    public string? DeletedBy { get; set; }
+
 
     public void Delete(DateTime deletedAt)
     {
@@ -27,7 +22,7 @@ public abstract class SoftDeletableEntity: AuditableEntity
 
     public void Restore()
     {
-        RestoreAtUtc = DateTime.UtcNow;
+        RestoredAtUtc = DateTime.UtcNow;
         IsDeleted = false;
     }
 }

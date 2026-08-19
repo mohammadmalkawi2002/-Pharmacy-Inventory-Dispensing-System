@@ -16,21 +16,22 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
 
             builder.Property(p => p.PrescriptionNumber)
                 .IsRequired()
-                .HasMaxLength(50);
-
-            
-
-            builder.Property(p=>p.PatientName)
-                .IsRequired()
-                .HasMaxLength (100);
-
-            builder.Property(p => p.PatientPhone)
-                .IsRequired(false)
                 .HasMaxLength(20);
+
+
+            //index:
+            builder.HasIndex(p => p.PrescriptionNumber).IsUnique();
+
+            builder.Property(p => p.PatientId)
+            .IsRequired();
+
+            builder.Property(p => p.DoctorId)
+                .IsRequired();
+
 
             builder.Property(p=>p.Notes)
                 .IsRequired(false)
-                .HasMaxLength(300);
+                .HasMaxLength(500);
 
             builder.Property(p => p.ValidFrom)
                 .IsRequired();
@@ -38,21 +39,27 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
             builder.Property(p => p.ValidTo)
                 .IsRequired();
 
-
+            builder.Property(p => p.Status)
+                .IsRequired()
+                .HasConversion<int>();
             //Relationships:
             builder.HasMany(p => p.Items)
                 .WithOne(i => i.Prescription)
                 .HasForeignKey(i => i.PrescriptionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(p => p.Patient)
+            .WithMany(patient => patient.Prescriptions)
+            .HasForeignKey(p => p.PatientId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
             builder.HasMany(p=>p.Dispenses)
                 .WithOne(di => di.Prescription)
                 .HasForeignKey(di => di.PrescriptionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //index:
-            builder.HasIndex(p=>p.PrescriptionNumber).IsUnique();
-           // builder.HasIndex(p => new { p.Status, p.ValidTo, p.PatientPhone });
+            
 
             //Qyery filter: 
             builder.HasQueryFilter(p => !p.IsDeleted);
