@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Asp.Versioning.OpenApi;
 using PharmacyInventoryDispensingSystem.WebApi.Middlewares;
 using PharmacyInventoryDispensingSystem.WebApi.OpenApi.Transformers;
 using System.Text.Json.Serialization;
@@ -13,7 +14,6 @@ namespace PharmacyInventoryDispensingSystem.WebApi
 
             services
                .AddCustomApiVersioning()
-               .AddApiDocumentation()
                .AddExceptionHandling()
                .AddControllerWithJsonConfiguration()
                .AddValidation();
@@ -39,47 +39,33 @@ namespace PharmacyInventoryDispensingSystem.WebApi
             services.AddApiVersioning(options =>
             {
                 options.DefaultApiVersion = new ApiVersion(1);
-                options.AssumeDefaultVersionWhenUnspecified = true;
                 options.ReportApiVersions = true;
                 options.ApiVersionReader = new UrlSegmentApiVersionReader();
-            }).AddMvc()
-            .AddApiExplorer(options =>
+            })
+             .AddMvc()
+             .AddApiExplorer(options =>
+             {
+              options.GroupNameFormat = "'v'VVV";
+             options.SubstituteApiVersionInUrl = true;
+             })
+          .AddOpenApi(options =>
             {
-                options.GroupNameFormat = "'v'VVV";
-                options.SubstituteApiVersionInUrl = true;
-            });
+            options.Document
+            .AddDocumentTransformer<VersionInfoTransformer>();
+
+              options.Document
+            .AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+
+             options.Document
+            .AddOperationTransformer<BearerSecuritySchemeTransformer>();
+
+             options.Document
+            .AddSchemaTransformer<ApiErrorResponseSchemaTransformer>();
+             });
 
             return services;
         }
 
-        public static IServiceCollection AddApiDocumentation(this IServiceCollection services) 
-        {
-            string[] versions = ["v1"];
-
-
-            foreach (var version in versions) 
-            {
-                services.AddOpenApi(version, options => 
-                {
-                    // Versioning config
-                    options.AddDocumentTransformer<VersionInfoTransformer>();
-                    // Security Scheme config:
-
-                    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
-
-                    // Security Operation config
-                    options.AddOperationTransformer<BearerSecuritySchemeTransformer>();
-
-                    options.AddSchemaTransformer<ApiErrorResponseSchemaTransformer>();
-
-
-
-                });
-            
-            }
-
-            return services;
-        }
 
         public static IServiceCollection AddExceptionHandling(this IServiceCollection services) 
         {

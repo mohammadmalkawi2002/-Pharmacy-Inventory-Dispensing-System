@@ -47,6 +47,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if (!RoleNames.All.Contains(Role)) 
             {
+                logger.LogWarning(
+                    "User registration rejected because role {Role} is invalid",
+                    Role);
+
                 return Error.Validation("Auth.Role.Invalid", "The selected role is invalid.");
 
             }
@@ -57,6 +61,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if (existingUser is not null)
             {
+                logger.LogWarning(
+                    "User registration rejected because an account already exists. ExistingUserId: {UserId}",
+                    existingUser.Id);
+
                 return Error.Conflict("Auth.Email.Exists", "A user with this email already exists.");
             }
 
@@ -77,8 +85,14 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
             var createResult = await userManager.CreateAsync(user, password);
 
             if (!createResult.Succeeded) 
-            { 
-              return createResult.Errors
+            {
+                logger.LogWarning(
+                    "Identity failed to create user. ErrorCount: {ErrorCount}, ErrorCodes: {ErrorCodes}",
+                    createResult.Errors.Count(),
+                    createResult.Errors.Select(x => x.Code).ToArray());
+
+
+                return createResult.Errors
                        .Select(error=>Error.Validation(error.Code,error.Description))
                        .ToList();
             }
@@ -89,13 +103,28 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if (!roleResult.Succeeded) 
             {
+                logger.LogError(
+                    "Failed to assign role {Role} to user {UserId}. ErrorCount: {ErrorCount}, ErrorCodes: {ErrorCodes}",
+                    Role,
+                    user.Id,
+                    roleResult.Errors.Count(),
+                    roleResult.Errors.Select(x => x.Code).ToArray());
+
+
                 return roleResult.Errors
                     .Select(error =>
                         Error.Validation(error.Code, error.Description))
                         .ToList();
             }
 
-            return await CreateAuthenticationResponseAsync(user, cancellationToken);
+            var response= await CreateAuthenticationResponseAsync(user, cancellationToken);
+
+            logger.LogInformation(
+                "User {UserId} registered successfully with role {Role}",
+                user.Id,
+                Role);
+
+            return response;
         }
 
 
@@ -112,6 +141,11 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
             //check if user Isactive?:
             if(user is null || !user.IsActive) 
             {
+                logger.LogWarning(
+                 "Login attempt rejected because the supplied credentials are invalid or user {UserId} is inactive",
+                 user?.Id);
+
+
                 return Error.Unauthorized(
                     "Auth.InvalidCredentials",
                     "Invalid email or password.");
@@ -124,6 +158,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
             //Locked?
             if (signInResult.IsLockedOut) 
             {
+                logger.LogWarning(
+                    "Login attempt rejected because user {UserId} is locked out",
+                    user.Id);
+
                 return Error.Unauthorized(
                     "Auth.LockedOut",
                     "The account is temporarily locked.");
@@ -143,13 +181,24 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if(!updateResult.Succeeded)
             {
+                logger.LogError(
+                    "Failed to update last login timestamp for user {UserId}. ErrorCount: {ErrorCount}, ErrorCodes: {ErrorCodes}",
+                    user.Id,
+                    updateResult.Errors.Count(),
+                    updateResult.Errors.Select(x => x.Code).ToArray());
+
                 return updateResult.Errors
                         .Select(error => Error.Failure(error.Code, error.Description))
                         .ToList();
             }
 
+            var response= await CreateAuthenticationResponseAsync(user, cancellationToken);
 
-         return await  CreateAuthenticationResponseAsync (user, cancellationToken);
+            logger.LogInformation(
+                "User {UserId} logged in successfully",
+                user.Id);
+
+            return response;
         }
 
        
@@ -162,6 +211,9 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if(existingRefreshToken is null) 
             {
+                logger.LogWarning(
+                "Refresh token request rejected because the token is invalid, expired, or revoked");
+
                 return Error.Unauthorized(
                     "Auth.RefreshToken.Invalid",
                     "Invalid refresh token.");
@@ -181,6 +233,11 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if ( !user.IsActive)
             {
+
+                logger.LogWarning(
+                    "Refresh token request rejected because user {UserId} is inactive",
+                    user.Id);
+
                 return Error.Unauthorized(
                     "Auth.User.Inactive",
                     "The user account is inactive.");
@@ -207,6 +264,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
             //    - new token is inserted
 
             await context.SaveChangesAsync(cancellationToken);
+
+            logger.LogInformation(
+                "Refresh token rotated successfully for user {UserId}",
+                user.Id);
 
             // 7. Get user's roles and permissions for the response.
 
@@ -242,6 +303,9 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
                 await refreshTokenService.RevokeAsync(refreshToken, cancellationToken: cancellationToken);
                 await context.SaveChangesAsync(cancellationToken);
 
+                logger.LogInformation(
+                    "User {UserId} logged out and refresh token was revoked",
+                    refreshToken.UserId);
 
             }
 
@@ -255,6 +319,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if (!currentUser.IsAuthenticated || currentUser.Id is null)
             {
+                logger.LogWarning(
+                 "Current user request rejected because the request is unauthenticated");
+
+
                 return Error.Unauthorized("Auth.Unauthorized", "Authentication is required.");
 
             }
@@ -263,6 +331,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if (user is null)
             {
+
+                logger.LogWarning("Authenticated identity references a user that does not exist. UserId: {UserId}",
+                    currentUser.Id);
+
                 return Error.Unauthorized("Auth.User.NotFound", "Authentication is required.");
 
 
@@ -285,7 +357,9 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
             // 1. Make sure the request comes from an authenticated user.
                 if(!currentUser.IsAuthenticated || currentUser.Id is null) 
                 {
-                    return Error.Unauthorized(
+                logger.LogWarning(
+                         "Password change rejected because the request is unauthenticated");
+                return Error.Unauthorized(
                     "Auth.Unauthorized",
                     "Authentication is required.");
                 }
@@ -296,6 +370,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if (user is null || !user.IsActive)
             {
+
+                logger.LogWarning("Password change rejected because user {UserId} does not exist",
+                    currentUser.Id);
+
                 return Error.Unauthorized(
                     "Auth.Unauthorized",
                     "Authentication is required.");
@@ -308,6 +386,13 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if (!result.Succeeded)
             {
+                logger.LogWarning(
+                    "Password change failed for user {UserId}. ErrorCount: {ErrorCount}, ErrorCodes: {ErrorCodes}",
+                    user.Id,
+                    result.Errors.Count(),
+                    result.Errors.Select(x => x.Code).ToArray());
+
+
                     return result.Errors
                     .Select(error =>
                         Error.Validation(
@@ -315,6 +400,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
                             error.Description))
                     .ToList();
             }
+
+            logger.LogInformation(
+                "Password changed successfully for user {UserId}",
+                user.Id);
 
             return Result.Success;
 
@@ -343,14 +432,14 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             await emailService.SendEmailAsync(Email,"Reset Your Password",htmlMessage, cancellationToken);
 
+            logger.LogInformation(
+                "Password reset email sent for user {UserId}",
+                user.Id);
+
             return Result.Success;
         }
 
 
-      
-       
-
-       
      
 
         public async Task<Result<Success>> ResetPasswordAsync(
@@ -364,6 +453,8 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if (user is null || !user.IsActive) 
             {
+                logger.LogWarning(
+                 "Password reset request rejected because the request is invalid");
                 return Error.Validation(
                     "Auth.ResetPassword.Invalid",
                     "Invalid password reset request.");
@@ -375,13 +466,29 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             if (!result.Succeeded) 
             {
+
+                logger.LogWarning(
+                    "Password reset failed for user {UserId}. ErrorCount: {ErrorCount}, ErrorCodes: {ErrorCodes}",
+                    user.Id,
+                    result.Errors.Count(),
+                    result.Errors.Select(x => x.Code).ToArray());
+
+
+
                 return result.Errors
-            .Select(error =>
-            Error.Validation(error.Code,
-            error.Description))
+                .Select(error =>
+                Error.Validation(
+                error.Code,
+                error.Description))
                 .ToList();
 
             }
+
+            logger.LogInformation(
+                "Password reset successfully for user {UserId}",
+                user.Id);
+
+
             return Result.Success;
         }
 

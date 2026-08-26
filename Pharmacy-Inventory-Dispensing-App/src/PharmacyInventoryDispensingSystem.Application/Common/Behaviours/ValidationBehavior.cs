@@ -9,12 +9,12 @@ using System.Text;
 namespace PharmacyInventoryDispensingSystem.Application.Common.Behaviours
 {
 
-    public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators = null)
+    public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators )
         : IPipelineBehavior<TRequest, TResponse>
             where TRequest : IRequest<TResponse>
             where TResponse : IResult
     {
-        private readonly IEnumerable<IValidator<TRequest>>? _validators = validators;
+        private readonly IEnumerable<IValidator<TRequest>> _validators = validators;
 
         public async Task<TResponse> Handle(
             TRequest request,
