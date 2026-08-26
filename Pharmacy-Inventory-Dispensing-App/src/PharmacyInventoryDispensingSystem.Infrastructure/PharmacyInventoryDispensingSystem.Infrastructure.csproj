@@ -1,19 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <Compile Remove="Identity\**" />
-    <EmbeddedResource Remove="Identity\**" />
-    <None Remove="Identity\**" />
+    <Compile Remove="Services\Jwt\**" />
+    <EmbeddedResource Remove="Services\Jwt\**" />
+    <None Remove="Services\Jwt\**" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PharmacyInventoryDispensingSystem.Domain\PharmacyInventoryDispensingSystem.Domain.csproj" />
     <ProjectReference Include="..\PharmacyInventoryDispensingSystem.Application\PharmacyInventoryDispensingSystem.Application.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\Jwt\" />
-    <Folder Include="Services\Email\" />
   </ItemGroup>
 
   <ItemGroup>

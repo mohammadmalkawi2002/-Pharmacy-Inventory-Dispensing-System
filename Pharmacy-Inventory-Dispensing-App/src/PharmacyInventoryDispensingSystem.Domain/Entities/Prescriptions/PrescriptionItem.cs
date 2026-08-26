@@ -13,15 +13,15 @@ public class PrescriptionItem:AuditableEntity
     public Guid MedicineId { get; set; }
     public Medicine Medicine { get; set; } = null!;
 
-    public int QuantityPrescribed { get; set; }
+    public int QuantityPrescribed { get; set; }  
 
     public int QuantityDispensed { get; set; }
 
-    public int MaxRefill { get; set; }
+    public int MaxRefill { get; set; } //2
 
-    public int RefillUsed { get; set; }
+    public int RefillUsed { get; set; }//1 refill
 
-    public string? DosageInstructions { get; set; }
+    public string? DosageInstructions { get; set; }// 1 2 6 == 12 pice ==> number of boxes 
 
    
 
