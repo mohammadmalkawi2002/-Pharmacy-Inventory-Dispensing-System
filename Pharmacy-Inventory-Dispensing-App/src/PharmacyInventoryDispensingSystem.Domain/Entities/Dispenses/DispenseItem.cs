@@ -3,16 +3,15 @@ using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 
 namespace PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 
-public class DispenseItem:AuditableEntity
+public class DispenseItem : AuditableEntity
 {
 
-  
+
 
     public Guid DispenseId { get; set; }
 
     public Guid PrescriptionItemId { get; set; }
 
-    public Guid MedicineBatchId { get; set; }
 
     public int Quantity { get; set; }
 
