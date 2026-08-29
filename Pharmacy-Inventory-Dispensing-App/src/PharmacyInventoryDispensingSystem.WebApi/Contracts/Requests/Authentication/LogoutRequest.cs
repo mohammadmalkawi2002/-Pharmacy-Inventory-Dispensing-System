@@ -1,6 +1,6 @@
 ﻿namespace PharmacyInventoryDispensingSystem.WebApi.Contracts.Requests.Authentication
 {
-    public  record LogoutRequest(string refreshToken);
+    public  record LogoutRequest(string RefreshToken);
     
     
 }

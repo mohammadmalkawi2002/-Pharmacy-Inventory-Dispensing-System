@@ -1,5 +1,5 @@
 namespace PharmacyInventoryDispensingSystem.WebApi.Contracts.Requests.Authentication
 {
-    public record ForgotPasswordRequest(string email);
+    public record ForgotPasswordRequest(string Email);
    
 }

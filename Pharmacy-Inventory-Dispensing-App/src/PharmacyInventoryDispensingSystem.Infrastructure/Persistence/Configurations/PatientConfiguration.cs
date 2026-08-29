@@ -22,21 +22,17 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
             builder.HasIndex(p => p.DocumentId)
                 .IsUnique();
 
-            builder.Property(p => p.FirstName)
-                .IsRequired()
-                .HasMaxLength(40);
-
-            builder.Property(p => p.LastName)
-                .IsRequired()
-                .HasMaxLength(40);
-
+            builder.Property(p => p.FullName)
+              .IsRequired()
+              .HasMaxLength(200);
 
             builder.Property(p => p.DateOfBirth)
+                .HasColumnType("date")
                 .IsRequired();
 
             builder.Property(p => p.PhoneNumber)
                 .IsRequired()
-                .HasMaxLength(20);
+                .HasMaxLength(16);
 
             builder.HasMany(p => p.Prescriptions)
                 .WithOne(p => p.Patient)
@@ -44,6 +40,22 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasQueryFilter(P => !P.IsDeleted);
+
+            // Active patient search/sorting by FullName.
+            builder.HasIndex(patient => new
+            {
+                patient.FullName,
+                patient.Id
+            })
+            .HasFilter("[IsDeleted] = 0");
+
+            // Active patient sorting by CreatedAt.
+            builder.HasIndex(patient => new
+            {
+                patient.CreatedAtUtc,
+                patient.Id
+            })
+            .HasFilter("[IsDeleted] = 0");
         }
     }
 }

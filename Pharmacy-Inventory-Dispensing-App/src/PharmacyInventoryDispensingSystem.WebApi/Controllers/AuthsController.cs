@@ -10,6 +10,7 @@ using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Aut
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authentication.Commands.Refresh;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authentication.Commands.Register;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authentication.Commands.ResetPassword;
+using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authentication.DTOs;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authentication.Queries;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization;
 using PharmacyInventoryDispensingSystem.WebApi.Contracts.ApiResponse;
@@ -21,13 +22,16 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
     [Route("api/v{version:apiVersion}/auth")]
     [ApiVersion("1.0")]
     [Tags("Auths")]
+    [Produces("application/json")]
+
     public sealed class AuthsController(ISender sender) : ApiController
     {
 
         [HttpPost("register")]
         [Authorize(Policy = PolicyNames.AdminOnly)]
         [Consumes("application/json")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType<AuthenticationResponse>(
+    StatusCodes.Status201Created)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status400BadRequest)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status409Conflict)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status500InternalServerError)]
@@ -58,7 +62,8 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         [HttpPost("login")]
         [AllowAnonymous]
         [Consumes("application/json")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType<AuthenticationResponse>(
+    StatusCodes.Status200OK)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status400BadRequest)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status500InternalServerError)]
@@ -68,7 +73,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request,
                                                CancellationToken cancellationToken)
         {
-            var command = new LoginCommand(request.email, request.password);
+            var command = new LoginCommand(request.Email, request.Password);
 
             var result = await sender.Send(command, cancellationToken);
 
@@ -81,7 +86,8 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         [HttpPost("refresh")]
         [AllowAnonymous]
         [Consumes("application/json")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType<AuthenticationResponse>(
+    StatusCodes.Status200OK)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status400BadRequest)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status500InternalServerError)]
@@ -103,7 +109,6 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status500InternalServerError)]
         [EndpointName("LogoutV1")]
         [EndpointSummary("Logs out the current user")]
@@ -111,7 +116,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         public async Task<IActionResult> Logout([FromBody] LogoutRequest request,
                                                 CancellationToken cancellationToken)
         {
-            var result = await sender.Send(new LogoutCommand(request.refreshToken), cancellationToken);
+            var result = await sender.Send(new LogoutCommand(request.RefreshToken), cancellationToken);
 
             return result.Match(_ => NoContent(),
                         Problem);
@@ -132,8 +137,8 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
                                                         CancellationToken cancellationToken)
         {
             var command = new ChangePasswordCommand(
-                request.currentPassword,
-                request.newPassword);
+                request.CurrentPassword,
+                request.NewPassword);
 
             var result = await sender.Send(command, cancellationToken);
 
@@ -157,7 +162,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request,
                                                         CancellationToken cancellationToken)
         {
-            var command = new ForgotPasswordCommand(request.email);
+            var command = new ForgotPasswordCommand(request.Email);
 
             var result= await sender.Send(command, cancellationToken);
 
@@ -197,7 +202,8 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpGet("me")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType<CurrentUserResponse>(
+    StatusCodes.Status200OK)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status500InternalServerError)]
