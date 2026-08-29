@@ -9,13 +9,13 @@ namespace PharmacyInventoryDispensingSystem.Domain.Entities.Patients
     public sealed class Patient : SoftDeletableEntity
     {
         /// <summary>
-        /// Identifying document number, such as a national ID.
-        /// Must be unique, consist of 10 digits, and start with 2.
+        /// Saudi national or resident identification number.
+        /// Must be unique, consist of exactly 10 digits,
+        /// and start with 1 for citizens or 2 for residents.
         /// </summary>
         public string DocumentId { get; set; } = string.Empty;
 
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
 
         public DateTime DateOfBirth { get; set; }
 

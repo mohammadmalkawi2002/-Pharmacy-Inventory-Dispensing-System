@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +14,7 @@ using PharmacyInventoryDispensingSystem.Infrastructure.Identity.Authorization;
 using PharmacyInventoryDispensingSystem.Infrastructure.Identity.Jwt;
 using PharmacyInventoryDispensingSystem.Infrastructure.Identity.RefreshTokens;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;
+using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Interceptors;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositories;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Seed;
 using PharmacyInventoryDispensingSystem.Infrastructure.Services.Email;
@@ -29,10 +31,11 @@ public static class DependencyInjection
         ;
 
         // Register the AppDbContext with the connection string: 
-        services.AddDbContext<AppDbContext>(options => 
+        services.AddDbContext<AppDbContext>((sp,options) => 
         {
             options.UseSqlServer(connectionString);
-            
+            options.AddInterceptors(sp.GetRequiredService<ISaveChangesInterceptor>());
+
         });
 
         
@@ -133,10 +136,16 @@ public static class DependencyInjection
             {
 
                 options.AddPolicy(
-                    permission,
-                    policy => policy.RequireClaim(
-                        ApplicationClaimTypes.Permission,
-                        permission));
+                 permission,
+                  policy =>
+                  {
+                   policy.RequireAuthenticatedUser();
+
+                  policy.RequireClaim(
+                 ApplicationClaimTypes.Permission,
+                 permission);
+              });
+
             }
 
 
@@ -158,7 +167,10 @@ public static class DependencyInjection
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IJwtTokenProvider, JwtTokenProvider>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<IPatientRepository, PatientRepository>();
 
+        // Register Interceptor:
+        services.AddScoped<ISaveChangesInterceptor,AuditableEntityInterceptor>();
 
 
         // Current User & Resource Authorization:

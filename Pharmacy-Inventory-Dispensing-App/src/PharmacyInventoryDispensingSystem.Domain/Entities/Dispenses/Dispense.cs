@@ -10,7 +10,7 @@ public class Dispense : AuditableEntity
 
     public Guid PrescriptionId { get; set; }
 
-    public string PharmacistId { get; set; }
+    public string PharmacistId { get; set; } = null!;
 
     public DateTimeOffset DispensedAt { get; set; }
 

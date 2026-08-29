@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using Asp.Versioning.OpenApi;
+using PharmacyInventoryDispensingSystem.WebApi.Contracts.ApiResponse;
 using PharmacyInventoryDispensingSystem.WebApi.Middlewares;
 using PharmacyInventoryDispensingSystem.WebApi.OpenApi.Transformers;
 using System.Text.Json.Serialization;
@@ -13,7 +15,6 @@ namespace PharmacyInventoryDispensingSystem.WebApi
 
             services
                .AddCustomApiVersioning()
-               .AddApiDocumentation()
                .AddExceptionHandling()
                .AddControllerWithJsonConfiguration()
                .AddValidation();
@@ -26,9 +27,15 @@ namespace PharmacyInventoryDispensingSystem.WebApi
 
         public static IServiceCollection AddControllerWithJsonConfiguration(this IServiceCollection services)
         {
-            services.AddControllers().AddJsonOptions(options => options
+            services.AddControllers().AddJsonOptions(options => {
+                options
                 .JsonSerializerOptions
-                .DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull);
+                .DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
+                options.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter() );
+
+            });
 
             return services;
         }
@@ -39,47 +46,37 @@ namespace PharmacyInventoryDispensingSystem.WebApi
             services.AddApiVersioning(options =>
             {
                 options.DefaultApiVersion = new ApiVersion(1);
-                options.AssumeDefaultVersionWhenUnspecified = true;
                 options.ReportApiVersions = true;
                 options.ApiVersionReader = new UrlSegmentApiVersionReader();
-            }).AddMvc()
-            .AddApiExplorer(options =>
+            })
+             .AddMvc()
+             .AddApiExplorer(options =>
+             {
+              options.GroupNameFormat = "'v'VVV";
+             options.SubstituteApiVersionInUrl = true;
+             })
+          .AddOpenApi(options =>
             {
-                options.GroupNameFormat = "'v'VVV";
-                options.SubstituteApiVersionInUrl = true;
-            });
+            options.Document
+            .AddDocumentTransformer<VersionInfoTransformer>();
 
-            return services;
-        }
+              options.Document
+            .AddDocumentTransformer<BearerSecuritySchemeTransformer>();
 
-        public static IServiceCollection AddApiDocumentation(this IServiceCollection services) 
-        {
-            string[] versions = ["v1"];
+             options.Document
+            .AddOperationTransformer<BearerSecuritySchemeTransformer>();
 
+             options.Document
+            .AddSchemaTransformer<ApiErrorResponseSchemaTransformer>();
 
-            foreach (var version in versions) 
-            {
-                services.AddOpenApi(version, options => 
-                {
-                    // Versioning config
-                    options.AddDocumentTransformer<VersionInfoTransformer>();
-                    // Security Scheme config:
+                options .Document.AddSchemaTransformer<AuthenticationExamplesSchemaTransformer>();
 
-                    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
-
-                    // Security Operation config
-                    options.AddOperationTransformer<BearerSecuritySchemeTransformer>();
-
-                    options.AddSchemaTransformer<ApiErrorResponseSchemaTransformer>();
-
-
-
-                });
             
-            }
+             });
 
             return services;
         }
+
 
         public static IServiceCollection AddExceptionHandling(this IServiceCollection services) 
         {
@@ -96,7 +93,59 @@ namespace PharmacyInventoryDispensingSystem.WebApi
             app.UseExceptionHandler();
 
             // 2. Status code pages for handling HTTP status codes
-            app.UseStatusCodePages();
+            app.UseStatusCodePages(async statusCodeContext =>
+            {
+                var httpContext = statusCodeContext.HttpContext;
+                var statusCode = httpContext.Response.StatusCode;
+
+                var (errorCode, message) = statusCode switch
+                {
+                    StatusCodes.Status400BadRequest =>
+                        ("Request.BadRequest", "The request is invalid."),
+
+                    StatusCodes.Status401Unauthorized =>
+                        ("Authentication.Unauthorized", "Authentication is required."),
+
+                    StatusCodes.Status403Forbidden =>
+                        (
+                            "Authorization.Forbidden",
+                            "You do not have permission to access this resource."
+                        ),
+
+                    StatusCodes.Status404NotFound =>
+                        (
+                            "Request.NotFound",
+                            "The requested resource was not found."
+                        ),
+
+                    StatusCodes.Status405MethodNotAllowed =>
+                        (
+                            "Request.MethodNotAllowed",
+                            "The requested HTTP method is not allowed."
+                        ),
+
+                    _ =>
+                        (
+                            "Request.Failed",
+                            "The request could not be completed."
+                        )
+                };
+
+                var errors = new Dictionary<string, string[]>
+                {
+                    [errorCode] = [message]
+                };
+
+                var response = new ApiErrorResponse(
+                    Success: false,
+                    Message: message,
+                    Errors: errors,
+                    TraceId: httpContext.TraceIdentifier);
+
+                await httpContext.Response.WriteAsJsonAsync(
+                    response,
+                    httpContext.RequestAborted);
+            });
 
             // 3. HTTPS redirection (before any other middleware that might generate URLs)
             app.UseHttpsRedirection();

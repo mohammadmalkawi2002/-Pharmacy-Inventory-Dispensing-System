@@ -25,10 +25,11 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi().WithDocumentPerVersion();
+
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "MechanicShop API V1");
+        options.SwaggerEndpoint("/openapi/v1.json", "PharmacyInventoryDispensingSystem API V1");
 
         options.EnableDeepLinking();
         options.DisplayRequestDuration();
