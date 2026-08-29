@@ -3,7 +3,10 @@ using Asp.Versioning.OpenApi;
 using PharmacyInventoryDispensingSystem.WebApi.Contracts.ApiResponse;
 using PharmacyInventoryDispensingSystem.WebApi.Middlewares;
 using PharmacyInventoryDispensingSystem.WebApi.OpenApi.Transformers;
+using PharmacyInventoryDispensingSystem.WebApi.RateLimiting;
+using System.Security.Claims;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 namespace PharmacyInventoryDispensingSystem.WebApi
 {
@@ -17,8 +20,11 @@ namespace PharmacyInventoryDispensingSystem.WebApi
                .AddCustomApiVersioning()
                .AddExceptionHandling()
                .AddControllerWithJsonConfiguration()
-               .AddValidation();
-              
+               .AddValidation()
+               .AddAppRateLimiting();
+
+
+
 
             return services;
         }
@@ -77,6 +83,117 @@ namespace PharmacyInventoryDispensingSystem.WebApi
             return services;
         }
 
+        public static IServiceCollection AddAppRateLimiting(this IServiceCollection services)
+        {
+            services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode =
+                    StatusCodes.Status429TooManyRequests;
+
+
+                options.OnRejected = async (
+                    context,
+                    cancellationToken) =>
+                {
+                    const string message =
+                        "Too many requests. Please try again later.";
+
+                    context.HttpContext.Response.StatusCode =
+                        StatusCodes.Status429TooManyRequests;
+
+                    var response = new
+                    {
+                        success = false,
+                        message,
+                        errors = new Dictionary<string, string[]>
+                        {
+                            ["RateLimit.Exceeded"] = [message]
+                        },
+                        traceId =
+                            context.HttpContext.TraceIdentifier
+                    };
+
+                    await context.HttpContext.Response.WriteAsJsonAsync(
+                        response,
+                        cancellationToken);
+                };
+
+                // Login, Refresh, Forgot Password, Reset Password
+                options.AddPolicy(
+                    RateLimitPolicyNames.AnonymousAuth,
+                    httpContext =>
+                    {
+                        string ipAddress =
+                            httpContext.Connection
+                                .RemoteIpAddress?
+                                .ToString()
+                            ?? "unknown";
+
+                        string partitionKey =
+                            $"{ipAddress}:{httpContext.Request.Path}";
+
+                        return RateLimitPartition
+                            .GetSlidingWindowLimiter(
+                                partitionKey,
+                                _ => new SlidingWindowRateLimiterOptions
+                                {
+                                    PermitLimit = 5,
+
+                                    Window =
+                                        TimeSpan.FromMinutes(1),
+
+                                    SegmentsPerWindow = 6,
+
+                                    QueueLimit = 0,
+
+                                    QueueProcessingOrder =
+                                        QueueProcessingOrder.OldestFirst,
+
+                                    AutoReplenishment = true
+                                });
+                    });
+
+                // Register, Logout, Change Password, Me
+                options.AddPolicy(
+                    RateLimitPolicyNames.AuthenticatedAuth,
+                    httpContext =>
+                    {
+                        string clientId =
+                            httpContext.User.FindFirstValue(
+                                ClaimTypes.NameIdentifier)
+                            ?? httpContext.User.FindFirstValue("sub")
+                            ?? httpContext.Connection
+                                .RemoteIpAddress?
+                                .ToString()
+                            ?? "unknown";
+
+                        string partitionKey =
+                            $"{clientId}:{httpContext.Request.Path}";
+
+                        return RateLimitPartition
+                            .GetSlidingWindowLimiter(
+                                partitionKey,
+                                _ => new SlidingWindowRateLimiterOptions
+                                {
+                                    PermitLimit = 10,
+
+                                    Window =
+                                        TimeSpan.FromMinutes(1),
+
+                                    SegmentsPerWindow = 6,
+
+                                    QueueLimit = 0,
+
+                                    QueueProcessingOrder =
+                                        QueueProcessingOrder.OldestFirst,
+
+                                    AutoReplenishment = true
+                                });
+                    });  
+            });
+
+            return services;
+        }
 
         public static IServiceCollection AddExceptionHandling(this IServiceCollection services) 
         {
@@ -154,15 +271,14 @@ namespace PharmacyInventoryDispensingSystem.WebApi
             // 5. CORS (before authentication/authorization)
 
 
-            // 6. Rate limiting (before authentication to protect auth endpoints)
 
-
-            // 7. Authentication (must come before authorization)
+          // 6. Authentication (must come before authorization)
             app.UseAuthentication();
-
-            // 8. Authorization (must come after authentication)
-            app.UseAuthorization();
-            // 9. Output caching (after auth to cache based on user context)
+          // 7. Rate limiting (after authentication to get userId and claims)
+            app.UseRateLimiter();
+          // 8. Authorization (must come after authentication)
+           app.UseAuthorization();
+          // 9. Output caching (after auth to cache based on user context)
 
 
             return app;

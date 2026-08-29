@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authentication.Commands.ChangePassword;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authentication.Commands.ForgotPassword;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authentication.Commands.Login;
@@ -15,6 +16,7 @@ using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Aut
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization;
 using PharmacyInventoryDispensingSystem.WebApi.Contracts.ApiResponse;
 using PharmacyInventoryDispensingSystem.WebApi.Contracts.Requests.Authentication;
+using PharmacyInventoryDispensingSystem.WebApi.RateLimiting;
 
 namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 {
@@ -23,12 +25,15 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
     [ApiVersion("1.0")]
     [Tags("Auths")]
     [Produces("application/json")]
+    [ProducesResponseType<ApiErrorResponse>(
+    StatusCodes.Status429TooManyRequests)]
 
     public sealed class AuthsController(ISender sender) : ApiController
     {
 
         [HttpPost("register")]
         [Authorize(Policy = PolicyNames.AdminOnly)]
+        [EnableRateLimiting(RateLimitPolicyNames.AuthenticatedAuth)]
         [Consumes("application/json")]
         [ProducesResponseType<AuthenticationResponse>(
     StatusCodes.Status201Created)]
@@ -38,7 +43,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         [EndpointName("RegisterV1")]
         [EndpointSummary("Registers a new user")]
         [EndpointDescription("Creates a new user account with the specified credentials and role.")]
-
+       
         public async Task<IActionResult> Register([FromBody] RegisterRequest request,
                                                   CancellationToken cancellationToken)
         {
@@ -61,6 +66,8 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
+        [EnableRateLimiting(
+    RateLimitPolicyNames.AnonymousAuth)]
         [Consumes("application/json")]
         [ProducesResponseType<AuthenticationResponse>(
     StatusCodes.Status200OK)]
@@ -85,6 +92,8 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPost("refresh")]
         [AllowAnonymous]
+        [EnableRateLimiting(
+    RateLimitPolicyNames.AnonymousAuth)]
         [Consumes("application/json")]
         [ProducesResponseType<AuthenticationResponse>(
     StatusCodes.Status200OK)]
@@ -105,6 +114,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPost("logout")]
         [Authorize]
+        [EnableRateLimiting(RateLimitPolicyNames.AuthenticatedAuth)]
         [Consumes("application/json")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status401Unauthorized)]
@@ -124,6 +134,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPost("change-password")]
         [Authorize]
+        [EnableRateLimiting(RateLimitPolicyNames.AuthenticatedAuth)]
         [Consumes("application/json")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status401Unauthorized)]
@@ -151,6 +162,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPost("forgot-password")]
         [AllowAnonymous]
+        [EnableRateLimiting(RateLimitPolicyNames.AnonymousAuth)]
         [Consumes("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status400BadRequest)]
@@ -178,6 +190,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPost("reset-password")]
         [AllowAnonymous]
+        [EnableRateLimiting(RateLimitPolicyNames.AnonymousAuth)]
         [Consumes("application/json")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status400BadRequest)]
@@ -202,6 +215,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpGet("me")]
         [Authorize]
+        [EnableRateLimiting(RateLimitPolicyNames.AuthenticatedAuth)]
         [ProducesResponseType<CurrentUserResponse>(
     StatusCodes.Status200OK)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status401Unauthorized)]
