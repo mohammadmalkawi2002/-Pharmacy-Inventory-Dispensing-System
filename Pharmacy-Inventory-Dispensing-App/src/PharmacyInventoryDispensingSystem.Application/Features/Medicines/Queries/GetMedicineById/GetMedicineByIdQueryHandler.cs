@@ -1,0 +1,36 @@
+using MediatR;
+using Microsoft.Extensions.Logging;
+using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
+using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Dtos;
+using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Mappers;
+using PharmacyInventoryDispensingSystem.Domain.Common.Results;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicineById
+{
+    public sealed class GetMedicineByIdQueryHandler(
+        IMedicineRepository medicineRepository,
+        ILogger<GetMedicineByIdQueryHandler> logger)
+        : IRequestHandler<GetMedicineByIdQuery, Result<MedicineDetailsResponseDto>>
+    {
+        public async Task<Result<MedicineDetailsResponseDto>> Handle(
+            GetMedicineByIdQuery request,
+            CancellationToken cancellationToken)
+        {
+            var medicine = await medicineRepository.GetByIdAsync(
+                request.MedicineId,
+                trackChanges: false,
+                cancellationToken: cancellationToken);
+
+            if (medicine is null)
+            {
+                logger.LogWarning("Medicine with ID {MedicineId} was not found.", request.MedicineId);
+                return MedicineErrors.NotFound(request.MedicineId);
+            }
+
+            return medicine.ToDetailsDto();
+        }
+    }
+}

@@ -29,7 +29,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.SecurityManager
             public const string Read = "Permissions.Medicines.Read";
             public const string Create = "Permissions.Medicines.Create";
             public const string Update = "Permissions.Medicines.Update";
-            public const string Delete = "Permissions.Medicines.Delete";
+          
             public const string Activate = "Permissions.Medicines.Activate";
             public const string Deactivate = "Permissions.Medicines.Deactivate";
             public const string ReadLowStock = "Permissions.Medicines.ReadLowStock";
@@ -70,7 +70,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.SecurityManager
             Medicines.Read,
             Medicines.Create,
             Medicines.Update,
-            Medicines.Delete,
             Medicines.Activate, 
             Medicines.Deactivate,
             Medicines.ReadLowStock,

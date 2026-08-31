@@ -41,9 +41,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
             builder.Property(pi => pi.QuantityPrescribed)
                 .IsRequired();
 
-            builder.Property(pi => pi.QuantityDispensed)
-                .IsRequired();
-
+          
             builder.Property(pi => pi.MaxRefill)
                 .IsRequired();
 
