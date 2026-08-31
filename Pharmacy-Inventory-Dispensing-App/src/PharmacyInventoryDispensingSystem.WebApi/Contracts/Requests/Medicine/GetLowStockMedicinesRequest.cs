@@ -1,0 +1,8 @@
+﻿namespace PharmacyInventoryDispensingSystem.WebApi.Contracts.Requests.Medicine
+{
+    public sealed record GetLowStockMedicinesRequest(
+      string? SearchTerm = null,
+      bool? IsActive = null,
+      int PageNumber = 1,
+      int PageSize = 10);
+}

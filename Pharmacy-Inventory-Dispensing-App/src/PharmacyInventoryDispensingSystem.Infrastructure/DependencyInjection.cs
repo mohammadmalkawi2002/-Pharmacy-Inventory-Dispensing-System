@@ -168,6 +168,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenProvider, JwtTokenProvider>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IPatientRepository, PatientRepository>();
+        services.AddScoped<IMedicineRepository, MedicineRepository>();
 
         // Register Interceptor:
         services.AddScoped<ISaveChangesInterceptor,AuditableEntityInterceptor>();
@@ -193,6 +194,7 @@ public static class DependencyInjection
         await context.Database.MigrateAsync(cancellationToken);
 
         await DatabaseSeeder.SeedIdentityAsync(scope.ServiceProvider, cancellationToken);
+        await DatabaseSeeder.SeedCatalogAsync(scope.ServiceProvider, cancellationToken);
     }
 }
 

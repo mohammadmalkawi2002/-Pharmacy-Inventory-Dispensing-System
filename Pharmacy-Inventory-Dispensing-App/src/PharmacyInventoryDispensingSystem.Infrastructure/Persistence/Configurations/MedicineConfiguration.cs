@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 using System;
@@ -19,7 +19,11 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
                     "CK_Medicines_QuantityInStock_NonNegative",
                     "[QuantityInStock] >= 0"
                     );
-                
+
+                table.HasCheckConstraint(
+                    "CK_Medicines_ReorderLevel_NonNegative",
+                    "[ReorderLevel] >= 0"
+                    );
             });
 
             builder.HasKey(m => m.Id);
@@ -31,7 +35,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
 
             builder.Property(m => m.Code)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(15);
 
 
             builder.Property(m => m.Strength)
@@ -44,9 +48,16 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
                 .HasConversion<int>();
 
 
-            builder.Property(m => m.Unit)
-                 .IsRequired()
-                 .HasMaxLength(50);
+            builder.Property(m => m.StockUnit)
+                .IsRequired()
+                .HasConversion<int>();
+
+            builder.Property(m => m.PackageUnit)
+                .IsRequired()
+                .HasConversion<int>();
+
+            builder.Property(m => m.UnitsPerPackage)
+                .IsRequired();
 
 
             builder.Property(m => m.ReorderLevel)
