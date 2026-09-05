@@ -1,0 +1,264 @@
+<div class="dispensing-page space-y-6 animate-fade-in">
+  <div class="card-glass p-6 md:p-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-100 text-primary flex items-center justify-center text-xl font-bold">
+          <i class="pi pi-shopping-cart"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-black text-surface-900 tracking-tight">Dispensing Workflow</h2>
+          <p class="text-sm text-surface-500">Look up active prescriptions, verify stock balances, and authorize disbursement.</p>
+        </div>
+      </div>
+      <p-button 
+        *hasPermission="Permissions.DispensesRead"
+        label="Dispensing Records" 
+        icon="pi pi-history" 
+        [text]="true" 
+        severity="secondary" 
+        routerLink="/dispensing/records" />
+    </div>
+
+    <p-steps [model]="steps" [activeIndex]="currentStep()" [readonly]="true" styleClass="mb-10" />
+
+    <!-- STEP 1: LOOKUP -->
+    @if (currentStep() === 0) {
+      <div class="max-w-xl mx-auto animate-fade-in p-6 bg-surface-50 rounded-2xl border border-surface-200 shadow-sm">
+        <div class="text-center mb-6">
+          <div class="w-14 h-14 rounded-full bg-blue-100 text-primary flex items-center justify-center mx-auto mb-3 text-2xl font-bold">
+            <i class="pi pi-search"></i>
+          </div>
+          <h3 class="text-lg font-bold text-surface-900">Locate Patient Prescription</h3>
+          <p class="text-xs text-surface-500 mt-1">Enter the prescription number and national document ID to begin verification.</p>
+        </div>
+
+        <form [formGroup]="lookupForm" (ngSubmit)="onLookupSubmit()" class="space-y-4">
+          <div class="form-field">
+            <label class="form-label">Prescription Identifier (RX) <span class="text-red-500">*</span></label>
+            <input pInputText formControlName="prescriptionNumber" placeholder="e.g. RX-000007" class="w-full py-2.5 text-sm font-mono" />
+            @if (lookupForm.get('prescriptionNumber')?.hasError('required') && lookupForm.get('prescriptionNumber')?.touched) {
+              <small class="form-error">Prescription number is required.</small>
+            }
+            @if (lookupForm.get('prescriptionNumber')?.hasError('pattern') && lookupForm.get('prescriptionNumber')?.touched) {
+              <small class="form-error">Prescription number must be in format RX-XXXXXX (e.g. RX-000007).</small>
+            }
+          </div>
+          
+          <div class="form-field">
+            <label class="form-label">Patient National / Document ID <span class="text-red-500">*</span></label>
+            <input pInputText formControlName="patientDocumentId" placeholder="e.g. 2000000029" class="w-full py-2.5 text-sm font-mono" />
+            @if (lookupForm.get('patientDocumentId')?.hasError('required') && lookupForm.get('patientDocumentId')?.touched) {
+              <small class="form-error">Patient Document ID is required.</small>
+            }
+            @if (lookupForm.get('patientDocumentId')?.hasError('pattern') && lookupForm.get('patientDocumentId')?.touched) {
+              <small class="form-error">Document ID must be 10 digits starting with 1 or 2 (e.g. 2000000029).</small>
+            }
+          </div>
+
+          <div class="pt-4 flex justify-end">
+            <p-button 
+              type="submit" 
+              [label]="isSubmitting() ? 'Verifying...' : 'Find Prescription'" 
+              [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-search'" 
+              [disabled]="isSubmitting()"
+              severity="primary" 
+              styleClass="shadow px-8" />
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- STEP 2: REVIEW & DISPENSE -->
+    @if (currentStep() === 1 && prescription(); as rx) {
+      <div class="animate-fade-in space-y-6">
+        
+        @if (!rx.canDispense) {
+          <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-3">
+            <i class="pi pi-exclamation-triangle text-xl"></i>
+            <span class="font-bold">{{ rx.unavailableReason || 'This prescription is currently unavailable or unauthorized for dispensing.' }}</span>
+          </div>
+        }
+
+        <!-- Patient & RX Info Header Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-5 bg-surface-50 rounded-xl border border-surface-200">
+            <div class="flex items-center gap-2 text-xs font-semibold text-surface-500 uppercase tracking-wider mb-2">
+              <i class="pi pi-user text-primary"></i> Patient Information
+            </div>
+            <div class="font-black text-xl text-surface-900">
+              {{ rx.patientName }}
+              @if (rx.patientDocumentId) {
+                <span class="text-xs font-normal text-surface-500 font-mono ml-2">(Doc ID: {{ rx.patientDocumentId }})</span>
+              }
+            </div>
+            <div class="text-xs mt-2 text-surface-600">Prescription Reference: <span class="font-mono font-bold text-primary px-1.5 py-0.5 bg-blue-50 rounded">{{ rx.prescriptionNumber }}</span></div>
+          </div>
+
+          <div class="p-5 bg-surface-50 rounded-xl border border-surface-200">
+            <div class="flex items-center gap-2 text-xs font-semibold text-surface-500 uppercase tracking-wider mb-2">
+              <i class="pi pi-id-card text-primary"></i> Clinical Authority
+            </div>
+            <div class="font-bold text-lg text-surface-900">Dr. {{ rx.doctorName }}</div>
+            <div class="text-xs mt-2 text-surface-600">Valid Period: <strong>{{ rx.validFrom | date:'mediumDate' }}</strong> to <strong>{{ rx.validTo | date:'mediumDate' }}</strong></div>
+          </div>
+        </div>
+
+        @if (rx.notes) {
+          <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-sm flex items-start gap-3">
+            <i class="pi pi-info-circle text-lg text-primary mt-0.5"></i>
+            <div>
+              <strong class="block font-bold mb-0.5">Practitioner Instructions:</strong>
+              <span>{{ rx.notes }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Medicines to Dispense Checklist -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-surface-900 text-base">Medication Dispensing Checklist</h3>
+            <span class="text-xs text-surface-500">Select eligible medications to dispense now. Prescribed quantities are fulfilled in full per item.</span>
+          </div>
+          
+          <div class="overflow-x-auto border border-surface-200 rounded-xl shadow-sm">
+            <table class="w-full min-w-[700px] text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-100 text-xs text-surface-600 uppercase tracking-wider">
+                  <th class="p-4 border-b text-center font-semibold whitespace-nowrap" style="width: 50px;">
+                    <p-checkbox 
+                      [ngModel]="isAllSelectableSelected()" 
+                      [binary]="true" 
+                      (onChange)="toggleSelectAll($event.checked)"
+                      [disabled]="!rx.canDispense"
+                      pTooltip="Select / Deselect All Eligible Items" />
+                  </th>
+                  <th class="p-4 border-b font-semibold whitespace-nowrap">Formulary Item</th>
+                  <th class="p-4 border-b text-center font-semibold whitespace-nowrap">Prescribed Qty</th>
+                  <th class="p-4 border-b text-center font-semibold whitespace-nowrap">Fills (Used / Max)</th>
+                  <th class="p-4 border-b text-center font-semibold whitespace-nowrap">Stock Balance</th>
+                  <th class="p-4 border-b text-center font-semibold whitespace-nowrap" style="width: 160px;">Dispense Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of dispenseItems(); track item.prescriptionItemId || item.medicineId; let i = $index) {
+                  <tr class="border-b border-surface-100 text-sm hover:bg-surface-50 transition-colors"
+                    [class.bg-blue-50\/30]="item.selected">
+                    <td class="p-4 text-center align-middle whitespace-nowrap">
+                      <p-checkbox 
+                        [ngModel]="item.selected" 
+                        [binary]="true" 
+                        (onChange)="toggleItemSelection(i, $event.checked)"
+                        [disabled]="!isItemSelectable(item)" />
+                    </td>
+                    <td class="p-4 align-middle">
+                      <div class="font-bold text-surface-900 text-sm truncate max-w-xs block" [pTooltip]="item.medicineName" tooltipPosition="top">
+                        {{ item.medicineName }}
+                      </div>
+                      <div class="text-xs text-surface-500 mt-0.5 whitespace-nowrap">
+                        @if (item.medicineCode) {
+                          <span class="font-mono bg-surface-100 px-1 rounded mr-1">{{ item.medicineCode }}</span>
+                        }
+                        {{ item.strength }} · {{ item.form }} ({{ item.stockUnit }})
+                      </div>
+                      @if (getItemUnselectableReason(item); as reason) {
+                        <div class="text-xs text-red-600 mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 bg-red-50 border border-red-200 rounded whitespace-nowrap font-semibold">
+                          <i class="pi pi-exclamation-triangle"></i> {{ reason }}
+                        </div>
+                      }
+                    </td>
+                    <td class="p-4 text-center font-mono font-bold text-surface-700 text-base align-middle whitespace-nowrap">
+                      {{ item.quantityPrescribed }}
+                    </td>
+                    <td class="p-4 text-center text-xs font-mono align-middle whitespace-nowrap">
+                      @if (item.maxFillCount !== undefined) {
+                        <span class="font-bold text-surface-800">{{ item.fillUsedCount }} / {{ item.maxFillCount }}</span>
+                        <span class="text-surface-500 block text-[11px]">({{ item.remainingFillCount }} remaining)</span>
+                      }
+                    </td>
+                    <td class="p-4 text-center font-mono text-base align-middle whitespace-nowrap">
+                      <span class="font-bold px-2 py-0.5 rounded" 
+                        [class.text-red-600]="item.quantityInStock === 0" 
+                        [class.bg-red-50]="item.quantityInStock === 0" 
+                        [class.text-emerald-600]="item.quantityInStock > 0">
+                        {{ item.quantityInStock }}
+                      </span>
+                    </td>
+                    <td class="p-4 text-center font-mono font-bold align-middle whitespace-nowrap">
+                      @if (item.selected) {
+                        <span class="px-3 py-1 bg-primary/10 text-primary font-mono font-bold rounded-lg text-base inline-block">
+                          {{ item.quantityPrescribed }}
+                        </span>
+                      } @else {
+                        <span class="text-surface-400 font-normal text-sm">-</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between items-center pt-6 mt-6 border-t border-surface-200 gap-4">
+          <p-button label="Cancel & Go Back" [text]="true" severity="secondary" (onClick)="resetWorkflow()" class="w-full sm:w-auto" />
+          <p-button 
+            [label]="isSubmitting() ? 'Authorizing & Updating Stock...' : 'Authorize & Dispense'" 
+            icon="pi pi-check" 
+            severity="primary" 
+            [disabled]="isSubmitting() || !canDispenseAll()"
+            [loading]="isSubmitting()"
+            (onClick)="onDispenseSubmit()"
+            styleClass="shadow px-8"
+            class="w-full sm:w-auto" />
+        </div>
+      </div>
+    }
+
+    <!-- STEP 3: CONFIRMATION -->
+    @if (currentStep() === 2 && dispenseResult(); as res) {
+      <div class="max-w-xl mx-auto text-center animate-fade-in py-8">
+        <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold shadow-md">
+          <i class="pi pi-check"></i>
+        </div>
+        
+        <h3 class="text-2xl font-black text-surface-900 tracking-tight">Dispense Order Completed</h3>
+        <p class="text-sm text-surface-600 mt-1">Prescription <span class="font-mono font-bold text-primary">{{ res.prescriptionNumber }}</span> for <strong class="text-surface-900">{{ res.patientName }}</strong> has been fulfilled.</p>
+        <span class="text-xs text-surface-500 block mt-1">Pharmacist: <strong>{{ res.pharmacistName }}</strong> · {{ res.dispensedAt | date:'medium' }}</span>
+
+        <div class="bg-surface-50 p-6 rounded-2xl border border-surface-200 text-left my-8 shadow-sm">
+          <div class="flex items-center justify-between text-xs font-bold text-surface-500 uppercase tracking-wider mb-3 border-b border-surface-200 pb-2">
+            <span>Fulfilled Items</span>
+            <span>Quantity</span>
+          </div>
+          <ul class="space-y-3">
+            @for (item of res.items; track item.id || item.prescriptionItemId) {
+              <li class="flex justify-between items-center text-sm">
+                <div>
+                  <span class="font-semibold text-surface-900 block">{{ item.medicineName }}</span>
+                  <span class="text-xs text-surface-500">{{ item.strength }} · {{ item.stockUnit }}</span>
+                </div>
+                <span class="text-primary font-mono font-bold bg-blue-50 px-2.5 py-1 rounded-lg">x{{ item.quantity }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <p-button 
+            label="Process Another Dispense" 
+            icon="pi pi-refresh" 
+            severity="secondary" 
+            [text]="true"
+            (onClick)="resetWorkflow()" />
+          <p-button 
+            label="View Dispense Record" 
+            icon="pi pi-external-link" 
+            severity="primary" 
+            styleClass="shadow px-6" 
+            (onClick)="viewDispenseRecord()" />
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

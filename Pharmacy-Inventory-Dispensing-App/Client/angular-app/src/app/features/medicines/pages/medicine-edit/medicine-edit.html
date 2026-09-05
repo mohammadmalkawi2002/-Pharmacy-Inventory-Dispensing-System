@@ -1,0 +1,29 @@
+<div class="medicine-edit-page space-y-6 animate-fade-in">
+  <div class="card-glass p-6 md:p-8">
+    <div class="flex items-center gap-4 mb-6 border-b border-surface-200 pb-4">
+      <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-xl font-bold">
+        <i class="pi pi-pencil"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-surface-900 tracking-tight">Edit Medicine Details</h2>
+        <p class="text-sm text-surface-500">Update medication properties and catalog information.</p>
+      </div>
+    </div>
+
+    @if (medicine()) {
+      <app-medicine-form 
+        [medicine]="medicine()"
+        [isSubmitting]="isSubmitting()"
+        (save)="onSave($event)"
+        (cancel)="onCancel()" />
+    } @else {
+      <div class="py-12">
+        <app-empty-state 
+          title="Data Unavailable"
+          description="Direct access or refresh is currently unsupported for editing until the API is fully verified."
+          actionLabel="Return to Catalog"
+          (action)="onCancel()" />
+      </div>
+    }
+  </div>
+</div>

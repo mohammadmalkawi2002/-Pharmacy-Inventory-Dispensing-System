@@ -17,6 +17,7 @@ using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.G
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicineByCode;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicineById;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicines;
+using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.LookupMedicines;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization;
 using PharmacyInventoryDispensingSystem.WebApi.Contracts.ApiResponse;
 using PharmacyInventoryDispensingSystem.WebApi.Contracts.Requests.Medicine;
@@ -76,15 +77,19 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         [EndpointName("GetLowStockMedicinesV1")]
         [MapToApiVersion("1.0")]
         public async Task<IActionResult> GetLowStockMedicines(
-            [FromQuery] GetLowStockMedicinesRequest request,
+            [FromQuery] GetMedicinesRequest request,
             CancellationToken cancellationToken)
         {
             var query = new GetLowStockMedicinesQuery(
                 request.SearchTerm,
+                request.Form,
+                request.StockUnit,
                 request.IsActive,
+                request.SortBy,
+                request.IsDescending,
                 request.PageNumber,
                 request.PageSize);
-               
+
 
             var result = await sender.Send(query, cancellationToken);
 
@@ -160,6 +165,37 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
                 response => Ok(response),
                 Problem);
         }
+
+
+
+        [HttpGet("lookup")]
+        [Authorize(Policy = Permissions.Medicines.Read)]
+        [EndpointSummary("Search medicines for selection")]
+        [EndpointDescription(
+    "Searches active, non-archived medicines by name or code for use in medicine selection controls, such as the prescription creation form. Returns a limited set of matching medicines.")]
+        [EndpointName("LookupMedicines")]
+        [MapToApiVersion("1.0")]
+        [ProducesResponseType(typeof(List<MedicineLookupDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> Lookup(
+    [FromQuery] string searchTerm,
+    CancellationToken cancellationToken)
+        {
+            var query = new LookupMedicinesQuery(searchTerm);
+
+            var result = await sender.Send(query, cancellationToken);
+
+            return result.Match(
+                Ok,
+                Problem);
+        }
+
+
+
+
+
 
         [HttpPost]
         [Authorize(Policy = Permissions.Medicines.Create)]
@@ -275,7 +311,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPost("{id:guid}/activate")]
         [Authorize(Policy = Permissions.Medicines.Activate)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status409Conflict)]
         [EndpointSummary("Activates a medicine")]
@@ -297,7 +333,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPost("{id:guid}/deactivate")]
         [Authorize(Policy = Permissions.Medicines.Deactivate)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status409Conflict)]
         [EndpointSummary("Deactivates a medicine")]

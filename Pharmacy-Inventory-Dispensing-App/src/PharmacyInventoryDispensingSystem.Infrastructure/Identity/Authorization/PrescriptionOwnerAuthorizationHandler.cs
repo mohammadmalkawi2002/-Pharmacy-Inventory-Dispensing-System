@@ -29,7 +29,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity.Authorizatio
             // Doctor can access only their own prescriptions.
 
             if (currentUser.IsInRole(RoleNames.Doctor) 
-                && currentUser.Id== resource.Id.ToString())
+                && currentUser.Id== resource.DoctorId)
             {
                 context.Succeed(requirement);
             }

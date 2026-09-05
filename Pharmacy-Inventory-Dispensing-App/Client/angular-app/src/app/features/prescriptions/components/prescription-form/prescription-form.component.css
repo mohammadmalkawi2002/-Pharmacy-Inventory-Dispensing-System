@@ -1,0 +1,38 @@
+:host {
+  display: block;
+}
+
+/* Ensure PrimeNG InputNumber component and inner input expand to fill 100% width */
+:host ::ng-deep .p-inputnumber {
+  width: 100% !important;
+  display: flex !important;
+}
+
+:host ::ng-deep .p-inputnumber .p-inputtext,
+:host ::ng-deep .p-inputnumber-input {
+  width: 100% !important;
+  flex: 1 1 auto !important;
+}
+
+/* Ensure PrimeNG Select expands to fill 100% width */
+:host ::ng-deep .p-select {
+  width: 100% !important;
+  display: flex !important;
+}
+
+:host ::ng-deep .p-select .p-select-label {
+  flex: 1 1 auto !important;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Hover effects for prescription item card */
+.prescription-item-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.prescription-item-card:hover {
+  border-color: rgba(2, 132, 199, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}

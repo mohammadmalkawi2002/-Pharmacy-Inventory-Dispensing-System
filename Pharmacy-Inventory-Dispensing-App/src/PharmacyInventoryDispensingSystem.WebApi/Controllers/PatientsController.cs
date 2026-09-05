@@ -13,9 +13,12 @@ using PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.Ge
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.GetPatientByDocumentId;
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.GetPatientById;
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.GetPatients;
+using PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.LookupPatients;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Patients;
 using PharmacyInventoryDispensingSystem.WebApi.Contracts.ApiResponse;
 using PharmacyInventoryDispensingSystem.WebApi.Contracts.Requests.Patient;
+using System.Numerics;
 
 namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 {
@@ -131,7 +134,30 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
                 Problem);
         }
 
+        [HttpGet("lookup")]
+        [Authorize(Policy = Permissions.Patients.Read)]
+        [EndpointSummary("Search patients for selection")]
+        [EndpointDescription(
+    "Searches non-archived patients by full name or document ID for use in patient selection controls, such as the prescription creation form. Returns a limited set of matching patients.")]
+        [EndpointName("LookupPatients")]
+        [MapToApiVersion("1.0")]
+        [ProducesResponseType<List<PatientResponseDto>>(
+       StatusCodes.Status200OK)]
+        [ProducesResponseType<ApiErrorResponse>(
+        StatusCodes.Status400BadRequest)]
+       
+        public async Task<IActionResult> Lookup(
+    [FromQuery] string searchTerm,
+    CancellationToken cancellationToken)
+        {
+            var query = new LookupPatientsQuery(searchTerm);
 
+            var result = await sender.Send(query, cancellationToken);
+
+            return result.Match(
+                Ok,
+                Problem);
+        }
 
 
 
@@ -244,6 +270,14 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         }
 
 
+
+        //   Patient Lookup userd in frontend to create prescription
+        //-search by FullName
+        //-search by DocumentId
+        //-AsNoTracking
+        //- Take(20)
+        //- لا Doctor ownership
+        //-archived automatically excluded
 
 
         [HttpDelete("{patientId:guid}")]

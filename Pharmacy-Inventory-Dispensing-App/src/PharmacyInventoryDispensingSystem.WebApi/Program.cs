@@ -45,7 +45,7 @@ else
     app.UseHsts();
 }
 
-
+app.UseRouting();
 //Custom for the order of Midllewares:
 app.UseCoreMiddlewares(builder.Configuration);
 

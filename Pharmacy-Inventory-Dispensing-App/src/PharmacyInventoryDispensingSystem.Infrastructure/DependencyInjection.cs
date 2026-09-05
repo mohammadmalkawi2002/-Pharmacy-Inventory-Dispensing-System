@@ -7,8 +7,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
+using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Authorization;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization;
+using PharmacyInventoryDispensingSystem.Infrastructure.BackgroundJobs;
 using PharmacyInventoryDispensingSystem.Infrastructure.Identity;
 using PharmacyInventoryDispensingSystem.Infrastructure.Identity.Authorization;
 using PharmacyInventoryDispensingSystem.Infrastructure.Identity.Jwt;
@@ -26,7 +28,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString=configuration.GetConnectionString("DefaultConnection") ??
+        services.AddSingleton(TimeProvider.System);
+
+        var connectionString =configuration.GetConnectionString("DefaultConnection") ??
             throw  new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
         ;
 
@@ -162,17 +166,25 @@ public static class DependencyInjection
         configuration.GetSection(AuthenticationOptions.SectionName));
 
 
+        //Register Background Services:
+        services.AddHostedService<PrescriptionExpirationBackgroundService>();
+
         //Register Repositries and services:
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IStaffUserService, StaffUserService>();
         services.AddScoped<IJwtTokenProvider, JwtTokenProvider>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IMedicineRepository, MedicineRepository>();
-
+        services.AddScoped<IPrescriptionRepository, PrescriptionRepository>();
+        services.AddScoped<IDispenseRepository, DispenseRepository>();
+        services.AddScoped<IDashboardRepository, DashboardRepository>();
         // Register Interceptor:
         services.AddScoped<ISaveChangesInterceptor,AuditableEntityInterceptor>();
-
+        services.AddScoped<
+    IPrescriptionAuthorizationService,
+    PrescriptionAuthorizationService>();
 
         // Current User & Resource Authorization:
 
@@ -180,6 +192,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<IAuthorizationHandler, 
             PrescriptionOwnerAuthorizationHandler>();
+        services.AddScoped<IUserLookupService, UserLookupService>();
 
 
         return services;

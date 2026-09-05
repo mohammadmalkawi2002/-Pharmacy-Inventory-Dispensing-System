@@ -1,0 +1,123 @@
+<div class="prescription-details-page space-y-6 animate-fade-in">
+  <div class="card-glass p-6 md:p-8 max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6 border-b border-surface-200 pb-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl font-bold">
+          <i class="pi pi-file"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-black text-surface-900 tracking-tight">Clinical Prescription Slip</h2>
+          <p class="text-sm text-surface-500">Review prescription details and authorized medications.</p>
+        </div>
+      </div>
+      <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary" (onClick)="onClose()" />
+    </div>
+
+    @if (isLoading() && !prescription()) {
+      <app-loading text="Loading prescription details..." />
+    } @else if (prescription(); as p) {
+      <div class="space-y-6 text-sm">
+        <!-- Patient Header Card -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 bg-surface-50 rounded-xl border border-surface-200 shadow-sm">
+          <div>
+            <span class="text-xs text-surface-500 block uppercase tracking-wider font-semibold">Patient Name & Document ID</span>
+            <h3 class="font-black text-xl text-surface-900 mt-1">
+              {{ p.patientName }}
+              @if (p.patientDocumentId) {
+                <span class="text-xs font-normal text-surface-500 font-mono ml-2">(ID: {{ p.patientDocumentId }})</span>
+              }
+            </h3>
+            <span class="text-sm font-mono text-primary font-bold mt-1 block">RX: {{ p.prescriptionNumber }}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <p-tag [value]="p.status" [severity]="getStatusSeverity(p.status)" styleClass="text-sm px-3 py-1" />
+          </div>
+        </div>
+
+        <!-- Practitioner & Validity Info Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 bg-surface-50 rounded-lg border border-surface-200 shadow-sm">
+            <span class="text-xs text-surface-500 block font-medium uppercase tracking-wider">Prescribing Practitioner</span>
+            <span class="font-bold text-base text-surface-800 mt-2 block">Dr. {{ p.doctorName }}</span>
+          </div>
+          <div class="p-4 bg-surface-50 rounded-lg border border-surface-200 shadow-sm">
+            <span class="text-xs text-surface-500 block font-medium uppercase tracking-wider">Validity Window</span>
+            <span class="font-bold text-base text-surface-800 mt-2 block">{{ p.validFrom | date:'mediumDate' }} - {{ p.validTo | date:'mediumDate' }}</span>
+          </div>
+          <div class="p-4 bg-surface-50 rounded-lg border border-surface-200 shadow-sm">
+            <span class="text-xs text-surface-500 block font-medium uppercase tracking-wider">Issued Date</span>
+            <span class="font-bold text-base text-surface-800 mt-2 block">{{ (p.createdAtUtc || p.createdAt) | date:'medium' }}</span>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        @if (p.notes) {
+          <div class="p-5 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 shadow-sm">
+            <span class="text-sm font-bold flex items-center gap-2 mb-2"><i class="pi pi-info-circle"></i> Clinical Instructions & Notes:</span>
+            <p class="text-sm leading-relaxed">{{ p.notes }}</p>
+          </div>
+        }
+
+        <!-- Items Table -->
+        <div class="mt-6">
+          <h4 class="text-base font-bold text-surface-800 mb-3 border-b border-surface-200 pb-2">Prescribed Medications</h4>
+          <div class="overflow-x-auto border border-surface-200 rounded-xl shadow-sm">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-100 text-xs text-surface-600 uppercase tracking-wider">
+                  <th class="p-4 border-b font-semibold whitespace-nowrap">Medication</th>
+                  <th class="p-4 border-b font-semibold whitespace-nowrap">Dosage Instructions</th>
+                  <th class="p-4 border-b text-center font-semibold whitespace-nowrap">Prescribed Qty</th>
+                  <th class="p-4 border-b text-center font-semibold whitespace-nowrap">Fills (Used / Max)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of p.items; track item.medicineId || $index) {
+                  <tr class="border-b border-surface-100 text-sm bg-white hover:bg-surface-50 transition-colors">
+                    <td class="p-4 align-middle">
+                      <div class="font-bold text-base text-surface-900 truncate max-w-xs block" [pTooltip]="item.medicineName" tooltipPosition="top">
+                        {{ item.medicineName }}
+                      </div>
+                      <div class="text-xs text-surface-500 mt-1 whitespace-nowrap">
+                        @if (item.medicineCode) {
+                          <span class="font-mono bg-surface-100 px-1 rounded mr-1">{{ item.medicineCode }}</span>
+                        }
+                        {{ item.strength || item.medicineStrength }} · {{ item.form || item.medicineForm }} ({{ item.stockUnit || item.medicineUnit }})
+                      </div>
+                    </td>
+                    <td class="p-4 align-middle text-surface-700 font-medium">
+                      {{ item.dosageInstructions || 'As directed' }}
+                    </td>
+                    <td class="p-4 text-center font-mono font-bold text-lg text-primary align-middle whitespace-nowrap">
+                      {{ item.quantityPrescribed ?? item.quantity }}
+                    </td>
+                    <td class="p-4 text-center text-sm font-semibold text-surface-700 align-middle whitespace-nowrap">
+                      @if (item.maxFillCount !== undefined) {
+                        <span>{{ item.fillUsedCount ?? 0 }} / {{ item.maxFillCount }}</span>
+                        <span class="text-xs text-surface-400 block font-normal">({{ item.remainingFillCount ?? (item.maxFillCount - (item.fillUsedCount ?? 0)) }} remaining)</span>
+                      } @else {
+                        <span>{{ item.refills || 0 }} refills</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-6 border-t border-surface-200 mt-8">
+          <p-button label="Close Details" icon="pi pi-check" severity="primary" (onClick)="onClose()" styleClass="px-8 shadow" />
+        </div>
+      </div>
+    } @else {
+      <div class="py-12">
+        <app-empty-state 
+          title="Prescription Not Found" 
+          description="Could not load the requested prescription details." 
+          actionLabel="Return to Records" 
+          (action)="onClose()" />
+      </div>
+    }
+  </div>
+</div>

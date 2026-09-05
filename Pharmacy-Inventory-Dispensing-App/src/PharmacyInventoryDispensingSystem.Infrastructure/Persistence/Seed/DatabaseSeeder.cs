@@ -62,106 +62,123 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Seed
             }
         }
 
-        private static async Task SeedRolePermissionsAsync(RoleManager<IdentityRole> roleManager, CancellationToken cancellationToken)
+        private static async Task SeedRolePermissionsAsync(
+        RoleManager<IdentityRole> roleManager,
+        CancellationToken cancellationToken)
         {
-            //1] create dictionary to store  each role with her permissions
-
-            var rolePermissions = new Dictionary<string, string[]>()
+            var rolePermissions = new Dictionary<string, string[]>
             {
                 [RoleNames.Admin] = Permissions.All,
 
                 [RoleNames.Receptionist] =
                 [
                     Permissions.Patients.Read,
-                    Permissions.Patients.Create,
-                    Permissions.Patients.Update
+            Permissions.Patients.Create,
+            Permissions.Patients.Update
                 ],
 
                 [RoleNames.Doctor] =
                 [
                     Permissions.Patients.Read,
-                    Permissions.Medicines.Read,
+            Permissions.Medicines.Read,
 
-                    Permissions.Prescriptions.Create,
-                    Permissions.Prescriptions.Update,
-                    Permissions.Prescriptions.Read,
-                    Permissions.Prescriptions.Cancel,
-                    Permissions.Prescriptions.Lookup,
-
+            Permissions.Prescriptions.Read,
+            Permissions.Prescriptions.Create,
+            Permissions.Prescriptions.Update,
+            Permissions.Prescriptions.Cancel
                 ],
 
                 [RoleNames.Pharmacist] =
                 [
-                     Permissions.Medicines.Read,
-                     Permissions.Medicines.Create,
-                     Permissions.Medicines.Update,
-                     Permissions.Medicines.Activate,
-                     Permissions.Medicines.Deactivate,
-                     Permissions.Medicines.ReadLowStock,
+                    Permissions.Medicines.Read,
+            Permissions.Medicines.Create,
+            Permissions.Medicines.Update,
+            Permissions.Medicines.Activate,
+            Permissions.Medicines.Deactivate,
+            Permissions.Medicines.ReadLowStock,
 
-                     Permissions.Prescriptions.Read,
-                     Permissions.Prescriptions.Lookup,
+            Permissions.Prescriptions.Lookup,
 
-                     Permissions.Dispenses.Read,
-                     Permissions.Dispenses.Create
+            Permissions.Dispenses.Read,
+            Permissions.Dispenses.Create
                 ]
-
             };
 
             foreach (var rolePermission in rolePermissions)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                //2] Find or get the role:
+
                 var role = await roleManager.FindByNameAsync(rolePermission.Key);
 
                 if (role is null)
-                {
                     continue;
-                }
 
-                //3] Get the existingClaims  if found :
+                var existingPermissionClaims = (await roleManager.GetClaimsAsync(role))
+                    .Where(claim =>
+                        claim.Type == ApplicationClaimTypes.Permission)
+                    .ToList();
 
-                var existingPermissions = (await roleManager.GetClaimsAsync(role))
-                                    .Where(claim => claim.Type == ApplicationClaimTypes.Permission)
-                                    .Select(claim => claim.Value)
-                                    .ToHashSet();
+                var requiredPermissions = rolePermission.Value.ToHashSet();
 
-
-                foreach (var permission in rolePermission.Value)
+                // Remove permissions that are no longer assigned to this role.
+                foreach (var existingClaim in existingPermissionClaims)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    if (existingPermissions.Contains(permission))
-                    {
+                    if (requiredPermissions.Contains(existingClaim.Value))
                         continue;
 
-                    }
-
-
-                    var result = await roleManager.AddClaimAsync(role,
-                            new Claim(ApplicationClaimTypes.Permission, permission
-
-                            ));
+                    var result = await roleManager.RemoveClaimAsync(
+                        role,
+                        existingClaim);
 
                     if (!result.Succeeded)
                     {
                         var errors = string.Join(
-                                             ", ",
-                        result.Errors.Select(error => error.Description));
+                            ", ",
+                            result.Errors.Select(error => error.Description));
+
+                        throw new InvalidOperationException(
+                            $"Failed to remove permission '{existingClaim.Value}' " +
+                            $"from role '{role.Name}': {errors}");
+                    }
+                }
+
+                var existingPermissions = existingPermissionClaims
+                    .Select(claim => claim.Value)
+                    .ToHashSet();
+
+                // Add permissions that are missing from this role.
+                foreach (var permission in requiredPermissions)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (existingPermissions.Contains(permission))
+                        continue;
+
+                    var result = await roleManager.AddClaimAsync(
+                        role,
+                        new Claim(
+                            ApplicationClaimTypes.Permission,
+                            permission));
+
+                    if (!result.Succeeded)
+                    {
+                        var errors = string.Join(
+                            ", ",
+                            result.Errors.Select(error => error.Description));
 
                         throw new InvalidOperationException(
                             $"Failed to seed permission '{permission}' " +
                             $"for role '{role.Name}': {errors}");
                     }
-
-                    existingPermissions.Add(permission);
                 }
-
-
             }
-
-
         }
+
+
+
+
 
         private static async Task<(ApplicationUser Admin, ApplicationUser Pharmacist, ApplicationUser Doctor, ApplicationUser Receptionist)> SeedUsersAsync(
             UserManager<ApplicationUser> userManager)

@@ -30,6 +30,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.HasSequence<int>("PrescriptionNumberSequence")
+            .StartsAt(1)
+            .IncrementsBy(1)
+            .HasMax(999999)
+            .IsCyclic(false);
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MedicineConfiguration).Assembly);
 
     }

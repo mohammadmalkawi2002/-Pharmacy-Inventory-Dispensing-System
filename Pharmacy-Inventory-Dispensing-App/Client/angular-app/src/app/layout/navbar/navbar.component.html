@@ -1,0 +1,80 @@
+<header class="navbar-wrapper card-glass">
+  <!-- Left: Toggle & Brand -->
+  <div class="navbar-brand-section">
+    <p-button
+      type="button"
+      icon="pi pi-bars"
+      [text]="true"
+      [rounded]="true"
+      styleClass="sidebar-toggle-btn"
+      (onClick)="toggleSidebar.emit()"
+      pTooltip="Toggle sidebar"
+      tooltipPosition="bottom" />
+
+    <div class="brand-info">
+      <div class="brand-logo-badge">
+        <i class="pi pi-plus"></i>
+      </div>
+      <div class="brand-text">
+        <h1 class="brand-title">Pharma<span class="text-primary">Care</span></h1>
+        <span class="brand-subtitle">Smart Inventory & Dispensing</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center: Search -->
+  <div class="navbar-search-section">
+    <div class="search-input-wrapper">
+      <i class="pi pi-search search-icon"></i>
+      <input
+        type="text"
+        class="navbar-search-input"
+        placeholder="Search patients, medicines, or prescriptions (Press / to search)..." />
+    </div>
+  </div>
+
+  <!-- Right: Actions & User -->
+  <div class="navbar-actions-section">
+    <!-- Dark Mode Toggle -->
+    <p-button
+      type="button"
+      [icon]="themeService.themeMode() === 'light' ? 'pi pi-moon' : 'pi pi-sun'"
+      [text]="true"
+      [rounded]="true"
+      styleClass="action-btn"
+      (onClick)="themeService.toggleDarkMode()"
+      [pTooltip]="themeService.themeMode() === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'"
+      tooltipPosition="bottom" />
+
+    <!-- Notifications placeholder -->
+    <div class="relative">
+      <p-button
+        type="button"
+        icon="pi pi-bell"
+        [text]="true"
+        [rounded]="true"
+        styleClass="action-btn"
+        pTooltip="Notifications"
+        tooltipPosition="bottom" />
+      <span class="notification-indicator"></span>
+    </div>
+
+    <!-- User Profile Dropdown -->
+    <div class="user-profile-btn" (click)="userMenu.toggle($event)">
+      <div class="user-avatar">
+        <i class="pi pi-user text-primary"></i>
+      </div>
+      <div class="user-details hidden md:flex">
+        <span class="user-name">{{ authStore.user()?.name }}</span>
+        <div class="flex items-center gap-1">
+          <p-tag
+            [value]="getRoleLabel(authStore.primaryRole())"
+            [severity]="getRoleSeverity(authStore.primaryRole())"
+            styleClass="text-xs py-0 px-1.5" />
+        </div>
+      </div>
+      <i class="pi pi-chevron-down text-xs text-surface-400 ml-1"></i>
+    </div>
+    <p-menu #userMenu [model]="userMenuItems" [popup]="true" styleClass="user-dropdown-menu" />
+  </div>
+</header>

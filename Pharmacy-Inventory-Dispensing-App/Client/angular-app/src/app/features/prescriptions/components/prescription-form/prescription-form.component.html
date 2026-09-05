@@ -1,0 +1,167 @@
+<form [formGroup]="prescriptionForm" (ngSubmit)="onSubmit()" class="space-y-6">
+  <!-- General Info -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Patient -->
+    <div class="form-field md:col-span-2">
+      <label class="form-label">Patient Record <span class="text-red-500">*</span></label>
+      <p-select formControlName="patientId" [options]="patientResults()" optionLabel="fullName" optionValue="id"
+        placeholder="Select or Search Patient..." [filter]="true" filterBy="fullName,documentId"
+        filterMatchMode="contains" [loading]="patientLoading()" (onFilter)="onPatientFilter($event)"
+        styleClass="w-full">
+
+        <ng-template let-patient pTemplate="item">
+          <div>
+            <div class="font-bold text-sm text-surface-900">
+              {{ patient.fullName }}
+            </div>
+          </div>
+        </ng-template>
+
+      </p-select>
+      @if (prescriptionForm.get('patientId')?.hasError('required') && prescriptionForm.get('patientId')?.touched) {
+      <small class="form-error">Patient selection is required.</small>
+      }
+    </div>
+
+    <!-- Valid From -->
+    <div class="form-field">
+      <label class="form-label">Valid From <span class="text-red-500">*</span></label>
+      <input pInputText type="date" formControlName="validFrom" class="w-full" />
+    </div>
+
+    <!-- Valid To -->
+    <div class="form-field">
+      <label class="form-label">Valid To <span class="text-red-500">*</span></label>
+      <input pInputText type="date" formControlName="validTo" class="w-full" />
+      @if (prescriptionForm.hasError('invalidDateRange') && prescriptionForm.get('validTo')?.touched) {
+      <small class="form-error">Valid To must be on or after Valid From.</small>
+      }
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div class="border rounded-xl border-surface-200 overflow-hidden shadow-sm">
+    <div class="bg-surface-50 p-4 border-b border-surface-200 flex justify-between items-center">
+      <div>
+        <h4 class="font-bold text-surface-900 text-sm flex items-center gap-2">
+          <i class="pi pi-briefcase text-primary"></i>
+          Medications to Prescribe <span class="text-red-500">*</span>
+        </h4>
+        <span class="text-xs text-surface-500">Select medications, specify quantity, max refills, and dosing instructions</span>
+      </div>
+      <p-button label="Add Medication" icon="pi pi-plus" size="small" [text]="true" severity="primary"
+        styleClass="font-bold" (onClick)="addItem()" />
+    </div>
+
+    <div formArrayName="items" class="p-4 space-y-4 bg-surface-0">
+      @for (itemCtrl of items.controls; track $index) {
+      <div [formGroupName]="$index"
+        class="prescription-item-card p-4 border rounded-xl border-surface-200 bg-surface-50/70 hover:bg-surface-50 transition-all relative">
+        
+        <!-- Item Header: Badge & Delete Action -->
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-surface-200/60">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-primary flex items-center justify-center text-xs font-bold">
+              {{ $index + 1 }}
+            </span>
+            <span class="text-xs font-bold text-surface-700">Medication Item</span>
+          </div>
+
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            size="small"
+            (onClick)="removeItem($index)"
+            [disabled]="items.length === 1"
+            pTooltip="Remove Medication"
+            tooltipPosition="top" />
+        </div>
+
+        <!-- Grid Layout for Inputs -->
+        <div class="grid grid-cols-12 gap-3.5 items-start">
+
+          <!-- Medication Select -->
+          <div class="form-field col-span-12 lg:col-span-4">
+            <label class="form-label text-xs font-semibold">Medication <span class="text-red-500">*</span></label>
+            <p-select
+              formControlName="medicineId"
+              [options]="medicineRowStates[$index]?.results() ?? []"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Search or choose medication..."
+              [filter]="true"
+              filterBy="name,code"
+              filterMatchMode="contains"
+              [loading]="medicineRowStates[$index]?.loading() ?? false"
+              (onFilter)="onMedicineFilter($index, $event)"
+              styleClass="w-full"
+              inputStyleClass="w-full"
+              appendTo="body">
+              <ng-template let-med pTemplate="item">
+                <div class="flex items-center justify-between py-1 w-full gap-2">
+                  <span class="font-bold text-sm text-surface-900 truncate">{{ med.name }}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-surface-100 text-surface-600 border border-surface-200 shrink-0">{{ med.code }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+
+          <!-- Quantity -->
+          <div class="form-field col-span-6 sm:col-span-3 lg:col-span-2">
+            <label class="form-label text-xs font-semibold">Quantity <span class="text-red-500">*</span></label>
+            <p-inputnumber
+              formControlName="quantityPrescribed"
+              [min]="1"
+              styleClass="w-full"
+              inputStyleClass="w-full" />
+          </div>
+
+          <!-- Max Fills -->
+          <div class="form-field col-span-6 sm:col-span-3 lg:col-span-2">
+            <label class="form-label text-xs font-semibold">Max Fills <span class="text-red-500">*</span></label>
+            <p-inputnumber
+              formControlName="maxFillCount"
+              [min]="1"
+              styleClass="w-full"
+              inputStyleClass="w-full" />
+          </div>
+
+          <!-- Dosage Instructions -->
+          <div class="form-field col-span-12 sm:col-span-6 lg:col-span-4">
+            <label class="form-label text-xs font-semibold">Dosage Instructions</label>
+            <input
+              pInputText
+              formControlName="dosageInstructions"
+              placeholder="e.g. 1 pill daily after meals"
+              class="w-full text-sm py-2" />
+          </div>
+
+        </div>
+      </div>
+      }
+
+      @if (items.hasError('duplicateMedicine') && items.touched) {
+      <small class="form-error block mt-2">Each medicine can only appear once in a prescription.</small>
+      }
+      @if (items.invalid && items.touched && !items.hasError('duplicateMedicine')) {
+      <small class="form-error block mt-2">Please ensure all required medicine fields are filled correctly.</small>
+      }
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="form-field">
+    <label class="form-label">Clinical Instructions & Special Notes</label>
+    <textarea pTextarea formControlName="notes" rows="3" placeholder="e.g. Take 1 tablet after meals twice daily..."
+      class="w-full text-sm"></textarea>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex items-center justify-end gap-3 pt-4 border-t border-surface-200">
+    <p-button type="button" label="Cancel" [text]="true" severity="secondary" (onClick)="cancel.emit()" />
+    <p-button type="submit" [label]="isSubmitting ? 'Submitting...' : 'Sign & Issue Prescription'"
+      [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'" [disabled]="isSubmitting" severity="primary"
+      styleClass="shadow" />
+  </div>
+</form>

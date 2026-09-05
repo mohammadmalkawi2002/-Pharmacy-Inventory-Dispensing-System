@@ -22,6 +22,9 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.HasSequence<int>("PrescriptionNumberSequence")
+                .HasMax(999999L);
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -425,18 +428,9 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset?>("DeletedAtUtc")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("DoctorId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
@@ -447,11 +441,8 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
 
                     b.Property<string>("PrescriptionNumber")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTimeOffset?>("RestoredAtUtc")
-                        .HasColumnType("datetimeoffset");
+                        .HasMaxLength(9)
+                        .HasColumnType("nvarchar(9)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -462,11 +453,11 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("date");
 
-                    b.Property<DateTime>("ValidTo")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("ValidTo")
+                        .HasColumnType("date");
 
                     b.HasKey("Id");
 
@@ -494,7 +485,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("MaxRefill")
+                    b.Property<int>("FillUsedCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxFillCount")
                         .HasColumnType("int");
 
                     b.Property<Guid>("MedicineId")
@@ -504,9 +498,6 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("QuantityPrescribed")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RefillUsed")
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAtUtc")
@@ -519,18 +510,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
 
                     b.HasIndex("MedicineId");
 
-                    b.HasIndex("PrescriptionId");
+                    b.HasIndex("PrescriptionId", "MedicineId")
+                        .IsUnique();
 
-                    b.ToTable("PrescriptionItems", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_PrescriptionItems_MaxRefill_NonNegative", "[MaxRefill] >= 0");
-
-                            t.HasCheckConstraint("CK_PrescriptionItems_QuantityDispensed_NonNegative", "[QuantityDispensed] >= 0");
-
-                            t.HasCheckConstraint("CK_PrescriptionItems_QuantityPrescribed_Positive", "[QuantityPrescribed] > 0");
-
-                            t.HasCheckConstraint("CK_PrescriptionItems_RefillUsed_NonNegative", "[RefillUsed] >= 0");
-                        });
+                    b.ToTable("PrescriptionItems", (string)null);
                 });
 
             modelBuilder.Entity("PharmacyInventoryDispensingSystem.Infrastructure.Identity.ApplicationUser", b =>
