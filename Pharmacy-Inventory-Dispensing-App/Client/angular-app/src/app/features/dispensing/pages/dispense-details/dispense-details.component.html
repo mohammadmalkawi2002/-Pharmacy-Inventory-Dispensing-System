@@ -1,0 +1,110 @@
+<div class="dispense-details-page space-y-6 animate-fade-in">
+  <div class="card-glass p-6 md:p-8 max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6 border-b border-surface-200 pb-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-100 text-primary flex items-center justify-center text-xl font-bold">
+          <i class="pi pi-file-check"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-black text-surface-900 tracking-tight">Dispense Audit Record</h2>
+          <p class="text-sm text-surface-500">View detailed medication disbursement log and practitioner instructions.</p>
+        </div>
+      </div>
+      <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary" (onClick)="onClose()" />
+    </div>
+
+    @if (isLoading()) {
+      <app-loading text="Loading dispense record..." />
+    } @else if (dispense(); as d) {
+      <div class="space-y-6 text-sm">
+        <!-- RX Header Card -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 bg-surface-50 rounded-xl border border-surface-200 shadow-sm">
+          <div>
+            <span class="text-xs text-surface-500 block uppercase tracking-wider font-semibold">Patient Information</span>
+            <h3 class="font-black text-xl text-surface-900 mt-1">
+              {{ d.patientName }}
+              @if (d.patientDocumentId) {
+                <span class="text-xs font-normal text-surface-500 font-mono ml-2">(Doc ID: {{ d.patientDocumentId }})</span>
+              }
+            </h3>
+            <span class="text-sm font-mono text-primary font-bold mt-1 block">RX: {{ d.prescriptionNumber }}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-surface-500 block uppercase tracking-wider font-semibold">Dispense Record Ref</span>
+            <span class="text-xs font-mono text-surface-600 bg-surface-100 px-2 py-1 rounded block mt-1">{{ d.id }}</span>
+          </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 bg-surface-50 rounded-lg border border-surface-200 shadow-sm">
+            <span class="text-xs text-surface-500 block font-medium uppercase tracking-wider">Dispensing Pharmacist</span>
+            <span class="font-bold text-base text-surface-800 mt-1 block">{{ d.pharmacistName }}</span>
+          </div>
+          <div class="p-4 bg-surface-50 rounded-lg border border-surface-200 shadow-sm">
+            <span class="text-xs text-surface-500 block font-medium uppercase tracking-wider">Dispensed Date & Time</span>
+            <span class="font-bold text-base text-surface-800 mt-1 block">{{ d.dispensedAt | date:'medium' }}</span>
+          </div>
+        </div>
+
+        @if (d.notes) {
+          <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-sm">
+            <span class="text-xs font-bold block uppercase tracking-wider mb-1">Notes & Remarks</span>
+            <p class="text-sm leading-relaxed">{{ d.notes }}</p>
+          </div>
+        }
+
+        <!-- Items Table -->
+        <div class="mt-6">
+          <h4 class="text-base font-bold text-surface-800 mb-3 border-b border-surface-200 pb-2">Disbursed Medications</h4>
+          <div class="overflow-x-auto border border-surface-200 rounded-xl shadow-sm">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-100 text-xs text-surface-600 uppercase tracking-wider">
+                  <th class="p-4 border-b font-semibold whitespace-nowrap">Formulary Item</th>
+                  <th class="p-4 border-b font-semibold whitespace-nowrap">Dosage Instructions</th>
+                  <th class="p-4 border-b text-center font-semibold whitespace-nowrap">Quantity Dispensed</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of d.items; track item.id || item.prescriptionItemId) {
+                  <tr class="border-b border-surface-100 text-sm bg-white hover:bg-surface-50 transition-colors">
+                    <td class="p-4 align-middle">
+                      <div class="font-bold text-base text-surface-900 truncate max-w-xs block" [pTooltip]="item.medicineName" tooltipPosition="top">
+                        {{ item.medicineName }}
+                      </div>
+                      <div class="text-xs text-surface-500 mt-1 whitespace-nowrap">
+                        @if (item.medicineCode) {
+                          <span class="font-mono bg-surface-100 px-1 rounded mr-1">{{ item.medicineCode }}</span>
+                        }
+                        {{ item.strength }} · {{ item.stockUnit }}
+                      </div>
+                    </td>
+                    <td class="p-4 align-middle text-surface-700 font-medium">
+                      {{ item.dosageInstructions || 'As directed' }}
+                    </td>
+                    <td class="p-4 text-center font-mono font-bold text-lg text-primary align-middle whitespace-nowrap">
+                      {{ item.quantity }} {{ item.stockUnit }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-6 border-t border-surface-200 mt-8">
+          <p-button label="Back to Dispensing Records" icon="pi pi-arrow-left" severity="primary" (onClick)="onClose()" styleClass="px-6 shadow" />
+        </div>
+      </div>
+    } @else {
+      <div class="py-12">
+        <app-empty-state 
+          title="Dispense Record Not Found" 
+          description="Could not locate the requested dispense log." 
+          actionLabel="Return to Records" 
+          (action)="onClose()" />
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,51 @@
+<aside class="sidebar-wrapper card-glass" [class.collapsed]="collapsed">
+  <div class="sidebar-header">
+    <div class="clinic-badge">
+      <div class="status-icon-wrapper">
+        <i class="pi pi-heart-fill"></i>
+      </div>
+      @if (!collapsed) {
+        <div class="clinic-info">
+          <span class="clinic-name">PharmaCare Core</span>
+          <span class="clinic-status">
+            <span class="online-dot"></span> Operational
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      @for (item of menuItems; track item.route) {
+        @if (isPermitted(item)) {
+          <li class="nav-item">
+            <a
+              [routerLink]="item.route"
+              routerLinkActive="active-link"
+              class="nav-link"
+              [pTooltip]="collapsed ? item.label : ''"
+              tooltipPosition="right">
+              <i [class]="item.icon + ' nav-icon'"></i>
+              @if (!collapsed) {
+                <span class="nav-label">{{ item.label }}</span>
+              }
+            </a>
+          </li>
+        }
+      }
+    </ul>
+  </nav>
+
+  @if (!collapsed) {
+    <div class="sidebar-footer">
+      <div class="system-status-box">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-surface-600">PharmaCare Cloud</span>
+          <span class="text-xs font-mono text-primary font-bold">v1.0</span>
+        </div>
+        <span class="text-xs text-surface-400 block mt-1">Encrypted & HIPAA Compliant </span>
+      </div>
+    </div>
+  }
+</aside>

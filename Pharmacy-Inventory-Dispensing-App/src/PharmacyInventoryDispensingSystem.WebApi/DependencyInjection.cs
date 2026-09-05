@@ -21,9 +21,11 @@ namespace PharmacyInventoryDispensingSystem.WebApi
                .AddExceptionHandling()
                .AddControllerWithJsonConfiguration()
                .AddValidation()
+               .AddConfiguredCors(configuration)
                .AddAppRateLimiting();
 
 
+          
 
 
             return services;
@@ -208,6 +210,26 @@ namespace PharmacyInventoryDispensingSystem.WebApi
             return services;
         }
 
+
+        public static IServiceCollection AddConfiguredCors(this IServiceCollection services, IConfiguration configuration)
+        {
+            var frontendUrl = configuration["Authentication:FrontendUrl"]
+                ?? throw new InvalidOperationException("Frontend URL is not configured.");
+
+
+            services.AddCors(options =>
+            options.AddPolicy(
+                "AllowFrontend",
+                policy => policy
+                    .WithOrigins(frontendUrl)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials()));
+
+            return services;
+        }
+
+
         public static IApplicationBuilder UseCoreMiddlewares(this IApplicationBuilder app, IConfiguration configuration)
         {
             // 1. Exception handling should be FIRST to catch all errors
@@ -273,10 +295,10 @@ namespace PharmacyInventoryDispensingSystem.WebApi
             // 4. Serilog request logging (early to log all requests) later i do not understand it
 
             // 5. CORS (before authentication/authorization)
+            app.UseCors("AllowFrontend");
 
 
-
-          // 6. Authentication (must come before authorization)
+            // 6. Authentication (must come before authorization)
             app.UseAuthentication();
           // 7. Rate limiting (after authentication to get userId and claims)
             app.UseRateLimiter();

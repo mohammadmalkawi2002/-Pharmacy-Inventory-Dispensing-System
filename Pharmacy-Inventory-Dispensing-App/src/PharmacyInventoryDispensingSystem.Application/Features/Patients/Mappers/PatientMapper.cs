@@ -37,6 +37,8 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Mapper
                    ];
         }
 
+       
+
        private static PatientDocumentType GetDocumentType(string documentId) 
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(documentId);

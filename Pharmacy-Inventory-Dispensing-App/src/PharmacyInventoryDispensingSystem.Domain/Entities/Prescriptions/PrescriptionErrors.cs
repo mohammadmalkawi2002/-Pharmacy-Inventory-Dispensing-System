@@ -7,36 +7,54 @@ namespace PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions
 {
     public static class PrescriptionErrors
     {
-        public static Error PrescriptionIdRequired => Error.Validation(
-            code: "Prescription.Id.Required",
-            description: "Prescription Id is  Required");
+
+        public static Error NotFound(Guid prescriptionId) =>
+          Error.NotFound(
+              code: "Prescription.NotFound",
+              description: $"Prescription with Id '{prescriptionId}' was not found.");
 
 
-        public static Error NumberRequired =>
-    Error.Validation(
-        code: "Prescription.PrescriptionNumber.Required",
-        description: "Prescription Number is required.");
+        public static Error LookupNotFound =>
+      Error.NotFound(
+          code: "Prescription.LookupNotFound",
+          description: "No prescription was found for the provided prescription number and patient document ID.");
 
-        public static Error PatientNameRequired =>
-         Error.Validation("Prescription.PatientNameRequired", "Patient name is required.");
-
-        public static Error DoctorIdRequired =>
-            Error.Validation("Prescription.DoctorIdRequired", "A prescribing doctor is required.");
-        public static Error NoItems =>
-    Error.Validation("Prescription.NoItems", "A prescription must have at least one item.");
-
-        public static Error CannotArchiveDispensed =>
-        Error.Conflict("Prescription.CannotArchiveDispensed", 
-            "Cannot archive a prescription that has been dispensed.");
-
-        public static Error InvalidValidityPeriod => Error.Validation(
-            "Prescription.InvalidValidityPeriod", "ValidFrom must be on or before ValidTo. ");
-
-        public static Error MaxRefillsNegative =>
-           Error.Validation("Prescription.MaxRefillsNegative", "Max refills cannot be negative.");
+        public static readonly Error Forbidden =
+        Error.Forbidden(
+            code: "Prescription.Forbidden",
+            description: "You are not permitted to access this prescription.");
 
 
+        public static Error CannotUpdateDispensed =>
+    Error.Conflict(
+        code: "Prescription.CannotUpdateDispensed",
+        description: "A prescription with dispensing history cannot be updated.");
+
+        public static Error DuplicateMedicine(Guid medicineId) =>
+            Error.Conflict(
+                code: "Prescription.DuplicateMedicine",
+                description: $"Medicine with Id '{medicineId}' cannot appear more than once in the same prescription.");
+
+        public static Error CannotUpdateInActive =>
+            Error.Conflict(
+                code: "Prescription.CannotUpdateInActive",
+                description: "An InActive prescription cannot be updated.");
+
+        
+
+        public static Error AlreadyCancelled =>
+            Error.Conflict(
+                code: "Prescription.AlreadyCancelled",
+                description: "The prescription is already cancelled.");
+
+        public static Error CannotCancelExpired =>
+            Error.Conflict(
+                code: "Prescription.CannotCancelExpired",
+                description: "An expired prescription cannot be cancelled.");
     }
 
+
 }
+
+
 

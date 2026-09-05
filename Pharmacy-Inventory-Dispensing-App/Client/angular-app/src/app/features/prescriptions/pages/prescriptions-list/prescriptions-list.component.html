@@ -1,0 +1,156 @@
+<div class="prescriptions-page space-y-6 animate-fade-in">
+  <!-- Page Header -->
+  <div class="card-glass p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl font-bold">
+        <i class="pi pi-file-edit"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-surface-900 tracking-tight">Prescription Records</h2>
+        <p class="text-sm text-surface-500">Track practitioner orders, validity cycles, and active medication regimens.</p>
+      </div>
+    </div>
+    
+    <p-button 
+      *hasPermission="Permissions.PrescriptionsCreate"
+      label="New Prescription" 
+      icon="pi pi-plus" 
+      severity="primary" 
+      styleClass="shadow" 
+      (onClick)="openCreateDialog()" />
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="card-glass p-6">
+    <div class="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col xl:flex-row gap-4 items-end shadow-sm">
+    <!-- Search Input -->
+    <div class="flex-1 w-full flex flex-col gap-1.5 min-w-[300px]">
+      <label class="text-xs font-bold text-surface-600 uppercase tracking-wider">Search Prescriptions</label>
+      <div class="relative">
+        <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"></i>
+        <input 
+          type="text" 
+          pInputText 
+          [(ngModel)]="searchQuery" 
+          (keyup.enter)="onSearch()" 
+          placeholder="Search by RX number, patient name, or doc ID..." 
+          class="w-full !pl-12 py-2.5 text-sm" />
+      </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="w-full xl:w-48 flex flex-col gap-1.5">
+      <label class="text-xs font-bold text-surface-600 uppercase tracking-wider">Status</label>
+      <p-select 
+        [options]="statusOptions" 
+        [(ngModel)]="status" 
+        (onChange)="onFilterChange()" 
+        optionLabel="label" 
+        optionValue="value" 
+        placeholder="All Statuses"
+        appendTo="body" 
+        styleClass="w-full" />
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex items-center gap-2 w-full xl:w-auto h-[42px]">
+      <p-button 
+        icon="pi pi-search" 
+        label="Search" 
+        severity="primary" 
+        styleClass="h-full px-5 shadow-sm font-bold"
+        (onClick)="onSearch()" />
+      <p-button 
+        icon="pi pi-filter-slash" 
+        severity="secondary" 
+        [text]="true" 
+        styleClass="h-full"
+        (onClick)="searchQuery=''; status=undefined; onFilterChange()" 
+        pTooltip="Clear filters" />
+    </div>
+  </div>
+</div>
+
+  @if (isLoading()) {
+    <app-loading text="Retrieving clinical prescriptions..." />
+  }
+
+  <!-- Prescriptions Table -->
+  <div class="card-glass p-6 overflow-hidden" [class.hidden]="isLoading()">
+    <p-table 
+      [value]="prescriptions()" 
+      [paginator]="true" 
+      [rows]="pageSize" 
+      [totalRecords]="totalRecords()" 
+      [lazy]="true" 
+      (onLazyLoad)="onPageChange($event)" 
+      [tableStyle]="{ 'min-width': '65rem' }" 
+      responsiveLayout="scroll">
+      
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="prescriptionNumber">RX Identifier <p-sorticon field="prescriptionNumber"></p-sorticon></th>
+          <th>Patient Name</th>
+          <th>Prescribing Doctor</th>
+          <th pSortableColumn="validFrom">Valid From <p-sorticon field="validFrom"></p-sorticon></th>
+          <th pSortableColumn="validTo">Valid To <p-sorticon field="validTo"></p-sorticon></th>
+          <th class="text-center">Status</th>
+          <th class="text-center" style="width: 140px;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-prescription>
+        <tr>
+          <td class="whitespace-nowrap">
+            <span class="font-mono text-xs font-bold px-2 py-1 bg-surface-100 rounded text-primary">
+              {{ prescription.prescriptionNumber }}
+            </span>
+          </td>
+          <td>
+            <span class="font-bold text-surface-900 text-sm truncate max-w-xs block" [pTooltip]="prescription.patientName" tooltipPosition="top">{{ prescription.patientName }}</span>
+          </td>
+          <td class="text-surface-700 text-sm whitespace-nowrap">Dr. {{ prescription.doctorName }}</td>
+          <td class="text-xs text-surface-600 whitespace-nowrap">{{ prescription.validFrom | date:'mediumDate' }}</td>
+          <td class="text-xs text-surface-600 whitespace-nowrap">{{ prescription.validTo | date:'mediumDate' }}</td>
+          <td class="text-center whitespace-nowrap">
+            <p-tag [value]="prescription.status" [severity]="getStatusSeverity(prescription.status)" />
+          </td>
+          <td class="text-center whitespace-nowrap">
+            <div class="table-actions">
+              <p-button 
+                icon="pi pi-eye" 
+                [text]="true" 
+                [rounded]="true" 
+                severity="info" 
+                (onClick)="openViewDialog(prescription)" 
+                pTooltip="Review RX Slip" />
+
+              @if (prescription.status === 'Active') {
+                <p-button 
+                  *hasPermission="Permissions.PrescriptionsCancel" 
+                  icon="pi pi-times-circle" 
+                  [text]="true" 
+                  [rounded]="true" 
+                  severity="danger" 
+                  (onClick)="confirmCancel(prescription)" 
+                  pTooltip="Cancel Prescription" />
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7" class="p-0">
+            <app-empty-state 
+              title="No Prescriptions Found" 
+              description="No prescription records match your criteria." 
+              actionLabel="Create Prescription" 
+              (action)="openCreateDialog()" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

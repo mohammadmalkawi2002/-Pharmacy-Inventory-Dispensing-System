@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Common;
+using PharmacyInventoryDispensingSystem.Application.Features.Patients.Dtos;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Patients;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using static PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization.Permissions;
 
@@ -22,7 +24,37 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositor
            
         }
 
-      
+
+
+        /// <summary>
+        /// this method used in frontend to use when selelct  Patients from dropdown in CreatePrescription
+        /// </summary>
+        /// <param name="searchTerm">by DocumentId Or FullName</param>
+        /// <param name="limit">the number of paitents returned</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Active  Patientss </returns>
+
+        public async Task<List<PatientLookupDto>> SearchForLookupAsync(
+            string searchTerm,
+            int limit,
+            CancellationToken cancellationToken = default)
+        {
+            string normalizedSearchTerm = searchTerm.Trim();
+
+            return await context.Patients
+                .AsNoTracking()
+                .Where(patient =>
+                    patient.FullName.Contains(normalizedSearchTerm) ||
+                    patient.DocumentId.StartsWith(normalizedSearchTerm))
+                .OrderBy(patient => patient.FullName)
+                .ThenBy(patient => patient.Id)
+                .Take(limit)
+                .Select(patient=>new PatientLookupDto(patient.Id,patient.DocumentId,patient.FullName))
+                .ToListAsync(cancellationToken);
+        }
+
+
+
         public async Task<bool> ExistsByDocumentIdAsync(
             string documentId,
            

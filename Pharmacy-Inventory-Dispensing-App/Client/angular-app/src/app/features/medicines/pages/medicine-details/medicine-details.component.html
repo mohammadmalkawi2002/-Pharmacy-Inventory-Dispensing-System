@@ -1,0 +1,116 @@
+<div class="medicine-details-page space-y-6 animate-fade-in p-4 md:p-6">
+  <div class="card-glass p-6 md:p-8 max-w-4xl mx-auto shadow-xl rounded-2xl bg-white/80 backdrop-blur-lg border border-surface-200/50">
+    
+    @if (isLoading()) {
+      <div class="py-12 flex justify-center">
+        <app-loading />
+      </div>
+    } @else if (error()) {
+      <div class="py-12">
+        <app-empty-state 
+          title="Data Unavailable"
+          [description]="error()!"
+          actionLabel="Return to Medicines"
+          (action)="onBack()" />
+      </div>
+    } @else if (medicine()) {
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-surface-200 pb-6">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-black shadow-inner shrink-0"
+               [class]="medicine()!.isActive ? 'bg-gradient-to-br from-green-100 to-emerald-50 text-green-600' : 'bg-gradient-to-br from-surface-100 to-surface-50 text-surface-500'">
+            <i class="pi" [class]="medicine()!.isActive ? 'pi-check-circle' : 'pi-ban'"></i>
+          </div>
+          <div>
+            <h2 class="text-3xl font-black text-surface-900 tracking-tight">{{ medicine()!.name }}</h2>
+            <p class="text-base font-mono text-surface-500 mt-1">Code: {{ medicine()!.code }}</p>
+          </div>
+        </div>
+        <p-button label="Back to List" icon="pi pi-arrow-left" [outlined]="true" severity="secondary" (onClick)="onBack()" />
+      </div>
+
+      <div class="space-y-8">
+        <!-- Status Banner -->
+        <div class="flex items-center justify-between p-6 bg-gradient-to-br from-surface-50 to-surface-100/50 rounded-2xl border border-surface-200 shadow-sm">
+          <div>
+            <p class="font-bold text-lg text-surface-900">{{ medicine()!.isActive ? 'Active Formulary' : 'Inactive / Archived' }}</p>
+            <p class="text-sm text-surface-500">Current system status</p>
+          </div>
+          <p-tag [value]="medicine()!.stockStatus" [severity]="getStockSeverity(medicine()!.stockStatus)" styleClass="text-base px-4 py-2 font-bold shadow-sm" />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          
+          <!-- Inventory Details Grid -->
+          <div>
+            <h3 class="text-sm font-bold text-surface-900 uppercase tracking-widest mb-4">Inventory Metrics</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm">
+                <p class="text-xs text-surface-500 font-bold uppercase tracking-widest mb-2">In Stock</p>
+                <p class="text-4xl font-black text-primary">{{ medicine()!.quantityInStock }}</p>
+                <p class="text-sm font-medium text-surface-500 mt-1">{{ medicine()!.stockUnit }}s</p>
+              </div>
+              <div class="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm">
+                <p class="text-xs text-surface-500 font-bold uppercase tracking-widest mb-2">Reorder Level</p>
+                <p class="text-4xl font-black text-surface-900">{{ medicine()!.reorderLevel }}</p>
+                <p class="text-sm font-medium text-surface-500 mt-1">{{ medicine()!.stockUnit }}s</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Packaging & Specs -->
+          <div>
+            <h3 class="text-sm font-bold text-surface-900 uppercase tracking-widest mb-4">Packaging & Specs</h3>
+            <div class="bg-white rounded-2xl border border-surface-200 shadow-sm divide-y divide-surface-100">
+              <div class="flex justify-between items-center p-5">
+                <span class="text-sm font-medium text-surface-500">Strength</span>
+                <span class="text-base font-bold text-surface-900">{{ medicine()!.strength }}</span>
+              </div>
+              <div class="flex justify-between items-center p-5">
+                <span class="text-sm font-medium text-surface-500">Form</span>
+                <span class="text-base font-bold text-surface-900">{{ medicine()!.form }}</span>
+              </div>
+              <div class="flex justify-between items-center p-5">
+                <span class="text-sm font-medium text-surface-500">Package Unit</span>
+                <span class="text-base font-bold text-surface-900">{{ medicine()!.packageUnit }}</span>
+              </div>
+              <div class="flex justify-between items-center p-5">
+                <span class="text-sm font-medium text-surface-500">Units per Package</span>
+                <span class="text-base font-bold text-surface-900">{{ medicine()!.unitsPerPackage }} {{ medicine()!.stockUnit }}s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Metadata -->
+        <div>
+          <h3 class="text-sm font-bold text-surface-900 uppercase tracking-widest mb-4">System Metadata</h3>
+          <div class="bg-surface-900 text-white rounded-2xl shadow-lg relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-6 opacity-5">
+              <i class="pi pi-server text-9xl"></i>
+            </div>
+            <div class="relative z-10 divide-y divide-surface-700">
+              <div class="flex justify-between items-center p-6">
+                <span class="text-sm font-medium text-surface-400">Created At (UTC)</span>
+                <span class="text-sm font-mono text-white">{{ medicine()!.createdAtUtc | date:'medium' }}</span>
+              </div>
+              @if (medicine()!.updatedAtUtc) {
+                <div class="flex justify-between items-center p-6">
+                  <span class="text-sm font-medium text-surface-400">Last Updated (UTC)</span>
+                  <span class="text-sm font-mono text-white">{{ medicine()!.updatedAtUtc | date:'medium' }}</span>
+                </div>
+              }
+              @if (medicine()!.updatedBy) {
+                <div class="flex justify-between items-center p-6">
+                  <span class="text-sm font-medium text-surface-400">Updated By (ID)</span>
+                  <span class="text-xs font-mono text-surface-900 bg-surface-100 px-3 py-1 rounded shadow-inner">{{ medicine()!.updatedBy }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+      </div>
+    }
+  </div>
+</div>

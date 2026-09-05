@@ -1,0 +1,88 @@
+<div class="login-page-wrapper">
+  <p-toast appendTo="body" />
+
+  <!-- Ambient background glow elements -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="login-card card-glass animate-fade-in relative z-10">
+    <!-- Brand Header -->
+    <div class="login-header">
+      <div class="login-logo-badge">
+        <i class="pi pi-plus"></i>
+      </div>
+      <h2 class="login-title">Pharma<span class="text-primary">Care</span></h2>
+      <p class="login-subtitle">Clinical Pharmacy Inventory & Dispensing Platform</p>
+    </div>
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email" class="form-label">Practitioner Email</label>
+        <div class="input-with-icon">
+          <i class="pi pi-envelope form-icon"></i>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            placeholder="practitioner@pharmacare.org"
+            class="w-full"
+            [class.ng-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" />
+        </div>
+        @if (loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched) {
+          <small class="form-error">Email is required.</small>
+        }
+        @if (loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched) {
+          <small class="form-error">Please enter a valid email address.</small>
+        }
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <div class="input-with-icon">
+          <i class="pi pi-lock form-icon"></i>
+          <input
+            id="password"
+            type="password"
+            pInputText
+            formControlName="password"
+            placeholder="••••••••••••"
+            class="w-full"
+            [class.ng-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" />
+        </div>
+        @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) {
+          <small class="form-error">Password is required.</small>
+        }
+        @if (loginForm.get('password')?.hasError('minlength') && loginForm.get('password')?.touched) {
+          <small class="form-error">Password must contain at least 6 characters.</small>
+        }
+      </div>
+
+      <!-- Forgot Password -->
+      <div class="form-options">
+        <span></span>
+        <a routerLink="/forgot-password" class="text-xs text-primary font-semibold hover:underline cursor-pointer">Forgot password?</a>
+      </div>
+
+      <!-- Submit Button -->
+      <p-button
+        type="submit"
+        [label]="isSubmitting ? 'Authenticating...' : 'Sign In to Portal'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-sign-in'"
+        [disabled]="isSubmitting"
+        severity="primary"
+        styleClass="w-full shadow-md py-3 text-base font-bold" />
+    </form>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-50 rounded-full border border-surface-200">
+        <i class="pi pi-shield text-emerald-600 text-xs"></i>
+        <span>256-Bit SSL End-to-End Encrypted</span>
+      </div>
+    </div>
+  </div>
+</div>

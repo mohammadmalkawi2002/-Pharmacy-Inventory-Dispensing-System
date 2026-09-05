@@ -18,7 +18,11 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queri
         {
             var (medicines, totalCount) = await medicineRepository.GetLowStockPagedAsync(
                 request.SearchTerm,
+                 request.Form,
+                 request.StockUnit,
                 request.IsActive,
+                request.SortBy,
+                request.IsDescending,
                 request.PageNumber,
                 request.PageSize,
                 cancellationToken);

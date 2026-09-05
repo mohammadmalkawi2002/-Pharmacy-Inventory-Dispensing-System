@@ -381,7 +381,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 
             //      verify the current password  and validate/update the new password using ASP Identity:
 
-         var result=   await userManager.ChangePasswordAsync(user, CurrentPassword, NewPassword);
+         var result= await userManager.ChangePasswordAsync(user, CurrentPassword, NewPassword);
 
 
             if (!result.Succeeded)

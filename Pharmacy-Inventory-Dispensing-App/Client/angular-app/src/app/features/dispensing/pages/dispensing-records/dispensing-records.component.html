@@ -1,0 +1,151 @@
+<div class="dispensing-records-page space-y-6 animate-fade-in">
+  <!-- Page Header -->
+  <div class="card-glass p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-blue-100 text-primary flex items-center justify-center text-xl font-bold">
+        <i class="pi pi-history"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-surface-900 tracking-tight">Dispensing Records</h2>
+        <p class="text-sm text-surface-500">Audit historical medication disbursements, fulfilled prescriptions, and dispensing timestamps.</p>
+      </div>
+    </div>
+    
+    <p-button 
+      *hasPermission="Permissions.DispensesCreate"
+      label="New Dispense Workflow" 
+      icon="pi pi-plus" 
+      severity="primary" 
+      styleClass="shadow" 
+      routerLink="/dispensing" />
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="card-glass p-6">
+    <div class="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col xl:flex-row gap-4 items-end shadow-sm">
+      <!-- Search Input -->
+      <div class="flex-1 w-full flex flex-col gap-1.5 min-w-[280px]">
+        <label class="text-xs font-bold text-surface-600 uppercase tracking-wider">Search Records</label>
+        <div class="relative">
+          <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"></i>
+          <input 
+            type="text" 
+            pInputText 
+            [(ngModel)]="searchQuery" 
+            (keyup.enter)="onSearch()" 
+            placeholder="Search by RX number, patient name, or doc ID..." 
+            class="w-full !pl-12 py-2.5 text-sm" />
+        </div>
+      </div>
+
+      <!-- From Date -->
+      <div class="w-full xl:w-44 flex flex-col gap-1.5">
+        <label class="text-xs font-bold text-surface-600 uppercase tracking-wider">From Date</label>
+        <input 
+          type="date" 
+          pInputText 
+          [(ngModel)]="fromDate" 
+          (change)="onFilterChange()" 
+          class="w-full py-2 text-sm" />
+      </div>
+
+      <!-- To Date -->
+      <div class="w-full xl:w-44 flex flex-col gap-1.5">
+        <label class="text-xs font-bold text-surface-600 uppercase tracking-wider">To Date</label>
+        <input 
+          type="date" 
+          pInputText 
+          [(ngModel)]="toDate" 
+          (change)="onFilterChange()" 
+          class="w-full py-2 text-sm" />
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2 w-full xl:w-auto h-[42px]">
+        <p-button 
+          icon="pi pi-search" 
+          label="Search" 
+          severity="primary" 
+          styleClass="h-full px-5 shadow-sm font-bold"
+          (onClick)="onSearch()" />
+        <p-button 
+          icon="pi pi-filter-slash" 
+          severity="secondary" 
+          [text]="true" 
+          styleClass="h-full"
+          (onClick)="clearFilters()" 
+          pTooltip="Clear filters" />
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <app-loading text="Retrieving dispensing records..." />
+  }
+
+  <!-- Records Table -->
+  <div class="card-glass p-6 overflow-hidden" [class.hidden]="isLoading()">
+    <p-table 
+      [value]="records()" 
+      [paginator]="true" 
+      [rows]="pageSize" 
+      [totalRecords]="totalRecords()" 
+      [lazy]="true" 
+      (onLazyLoad)="onPageChange($event)" 
+      [tableStyle]="{ 'min-width': '55rem' }" 
+      responsiveLayout="scroll">
+      
+      <ng-template #header>
+        <tr>
+          <th>RX Identifier</th>
+          <th>Patient Name</th>
+          <th>Dispensing Pharmacist</th>
+          <th>Dispensed Date & Time</th>
+          <th class="text-center" style="width: 140px;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-record>
+        <tr>
+          <td class="whitespace-nowrap">
+            <span class="font-mono text-xs font-bold px-2 py-1 bg-surface-100 rounded text-primary">
+              {{ record.prescriptionNumber }}
+            </span>
+          </td>
+          <td>
+            <span class="font-bold text-surface-900 text-sm truncate max-w-xs block" [pTooltip]="record.patientName" tooltipPosition="top">
+              {{ record.patientName }}
+            </span>
+          </td>
+          <td class="text-surface-700 text-sm whitespace-nowrap">
+            {{ record.pharmacistName }}
+          </td>
+          <td class="text-xs text-surface-600 whitespace-nowrap">
+            {{ record.dispensedAt | date:'medium' }}
+          </td>
+          <td class="text-center whitespace-nowrap">
+            <p-button 
+              icon="pi pi-eye" 
+              [text]="true" 
+              [rounded]="true" 
+              severity="info" 
+              (onClick)="viewDetails(record)" 
+              pTooltip="View Dispense Details" />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="5" class="p-0">
+            <app-empty-state 
+              title="No Dispense Records Found" 
+              description="No historical dispense logs match your criteria." 
+              actionLabel="New Dispense Workflow" 
+              (action)="navigateToNewDispense()" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

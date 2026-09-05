@@ -1,0 +1,18 @@
+<div class="medicine-create-page space-y-6 animate-fade-in">
+  <div class="card-glass p-6 md:p-8">
+    <div class="flex items-center gap-4 mb-6 border-b border-surface-200 pb-4">
+      <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold">
+        <i class="pi pi-plus-circle"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-surface-900 tracking-tight">Add New Medicine</h2>
+        <p class="text-sm text-surface-500">Register a new medication in the inventory catalog.</p>
+      </div>
+    </div>
+
+    <app-medicine-form 
+      [isSubmitting]="isSubmitting()"
+      (save)="onSave($event)"
+      (cancel)="onCancel()" />
+  </div>
+</div>

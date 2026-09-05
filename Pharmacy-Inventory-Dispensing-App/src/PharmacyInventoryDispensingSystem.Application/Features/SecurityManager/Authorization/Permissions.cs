@@ -40,7 +40,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.SecurityManager
             public const string Read = "Permissions.Prescriptions.Read";
             public const string Create = "Permissions.Prescriptions.Create";
             public const string Update = "Permissions.Prescriptions.Update";
-            public const string Delete = "Permissions.Prescriptions.Delete";
             public const string Cancel = "Permissions.Prescriptions.Cancel";
             public const string Lookup = "Permissions.Prescriptions.Lookup";
         }
@@ -79,7 +78,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.SecurityManager
            Prescriptions.Read,
            Prescriptions.Create,
            Prescriptions.Update,
-           Prescriptions.Delete,
            Prescriptions.Cancel,
            Prescriptions.Lookup,
 

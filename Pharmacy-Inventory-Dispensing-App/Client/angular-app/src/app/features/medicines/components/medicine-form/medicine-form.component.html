@@ -1,0 +1,87 @@
+<form [formGroup]="medicineForm" (ngSubmit)="onSubmit()" class="space-y-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Code -->
+    <div class="form-field md:col-span-1">
+      <label class="form-label">Barcode / Code <span class="text-red-500">*</span></label>
+      <input pInputText formControlName="code" placeholder="e.g. 6921574836209" class="w-full" />
+      @if (medicineForm.get('code')?.hasError('required') && medicineForm.get('code')?.touched) {
+        <small class="form-error">Code is required.</small>
+      }
+      @if (medicineForm.get('code')?.hasError('maxlength') && medicineForm.get('code')?.touched) {
+        <small class="form-error">Code must not exceed 15 characters.</small>
+      }
+      @if (medicineForm.get('code')?.hasError('pattern') && medicineForm.get('code')?.touched) {
+        <small class="form-error">Code must contain digits only.</small>
+      }
+    </div>
+
+    <!-- Name -->
+    <div class="form-field md:col-span-1">
+      <label class="form-label">Medicine Name <span class="text-red-500">*</span></label>
+      <input pInputText formControlName="name" placeholder="e.g. Losartan" class="w-full" />
+      @if (medicineForm.get('name')?.hasError('required') && medicineForm.get('name')?.touched) {
+        <small class="form-error">Name is required.</small>
+      }
+      @if (medicineForm.get('name')?.hasError('maxlength') && medicineForm.get('name')?.touched) {
+        <small class="form-error">Name must not exceed 100 characters.</small>
+      }
+    </div>
+
+    <!-- Strength -->
+    <div class="form-field">
+      <label class="form-label">Strength <span class="text-red-500">*</span></label>
+      <input pInputText formControlName="strength" placeholder="e.g. 100 mg" class="w-full" />
+      @if (medicineForm.get('strength')?.hasError('required') && medicineForm.get('strength')?.touched) {
+        <small class="form-error">Strength is required.</small>
+      }
+      @if (medicineForm.get('strength')?.hasError('maxlength') && medicineForm.get('strength')?.touched) {
+        <small class="form-error">Strength must not exceed 50 characters.</small>
+      }
+    </div>
+
+    <!-- Form -->
+    <div class="form-field">
+      <label class="form-label">Form <span class="text-red-500">*</span></label>
+      <p-select formControlName="form" [options]="formOptions" optionLabel="label" optionValue="value" placeholder="Select form" styleClass="w-full" />
+    </div>
+
+    <!-- Package Unit -->
+    <div class="form-field">
+      <label class="form-label">Package Unit <span class="text-red-500">*</span></label>
+      <p-select formControlName="packageUnit" [options]="packageUnitOptions" optionLabel="label" optionValue="value" placeholder="Select package unit" styleClass="w-full" />
+      @if (medicineForm.get('packageUnit')?.hasError('required') && medicineForm.get('packageUnit')?.touched) {
+        <small class="form-error">Package Unit is required.</small>
+      }
+    </div>
+
+    <!-- Stock Unit -->
+    <div class="form-field">
+      <label class="form-label">Stock Unit <span class="text-red-500">*</span></label>
+      <p-select formControlName="stockUnit" [options]="stockUnitOptions" optionLabel="label" optionValue="value" placeholder="Select stock unit" styleClass="w-full" />
+      @if (medicineForm.get('stockUnit')?.hasError('required') && medicineForm.get('stockUnit')?.touched) {
+        <small class="form-error">Stock Unit is required.</small>
+      }
+    </div>
+
+    <!-- Units Per Package -->
+    <div class="form-field">
+      <label class="form-label">Units Per Package <span class="text-red-500">*</span></label>
+      <p-inputnumber formControlName="unitsPerPackage" [min]="1" [showButtons]="true" styleClass="w-full" />
+    </div>
+
+    <!-- Reorder Level -->
+    <div class="form-field">
+      <label class="form-label">Reorder Level <span class="text-red-500">*</span></label>
+      <p-inputnumber formControlName="reorderLevel" [min]="0" [showButtons]="true" styleClass="w-full" />
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex items-center justify-end gap-3 pt-6 mt-4 border-t border-surface-200">
+    <p-button type="button" label="Cancel" [text]="true" severity="secondary" (onClick)="cancel.emit()" />
+    <p-button type="submit"
+      [label]="isSubmitting ? 'Saving...' : (medicine ? 'Update Medicine' : 'Create Medicine')"
+      [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+      [disabled]="isSubmitting" severity="primary" styleClass="shadow" />
+  </div>
+</form>

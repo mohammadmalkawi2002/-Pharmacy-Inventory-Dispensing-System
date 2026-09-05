@@ -11,25 +11,8 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
     {
         public void Configure(EntityTypeBuilder<PrescriptionItem> builder)
         {
-            builder.ToTable("PrescriptionItems", table =>
-            {
-                table.HasCheckConstraint(
-                    "CK_PrescriptionItems_QuantityPrescribed_Positive",
-                    "[QuantityPrescribed] > 0");
-
-                table.HasCheckConstraint(
-                    "CK_PrescriptionItems_QuantityDispensed_NonNegative",
-                    "[QuantityDispensed] >= 0");
-
-                table.HasCheckConstraint(
-                    "CK_PrescriptionItems_MaxRefill_NonNegative",
-                    "[MaxRefill] >= 0");
-
-                table.HasCheckConstraint(
-                    "CK_PrescriptionItems_RefillUsed_NonNegative",
-                    "[RefillUsed] >= 0");
-            });
-
+            builder.ToTable("PrescriptionItems");
+            
             builder.HasKey(pi => pi.Id);
 
             builder.Property(pi => pi.PrescriptionId)
@@ -41,27 +24,29 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
             builder.Property(pi => pi.QuantityPrescribed)
                 .IsRequired();
 
-          
-            builder.Property(pi => pi.MaxRefill)
+            builder.Property(pi => pi.MaxFillCount)
                 .IsRequired();
 
-            builder.Property(pi => pi.RefillUsed)
+            builder.Property(pi => pi.FillUsedCount)
                 .IsRequired();
 
             builder.Property(pi => pi.DosageInstructions)
                 .HasMaxLength(500);
 
-           
-            
+            // Relationships
 
             builder.HasOne(pi => pi.Medicine)
-                .WithMany(m => m.PrescriptionItems)
+                .WithMany(medicine => medicine.PrescriptionItems)
                 .HasForeignKey(pi => pi.MedicineId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasIndex(pi => pi.PrescriptionId);
-
-            builder.HasIndex(pi => pi.MedicineId);
+            // A medicine can appear only once within the same prescription.
+            builder.HasIndex(pi => new
+            {
+                pi.PrescriptionId,
+                pi.MedicineId
+            })
+            .IsUnique();
 
 
 

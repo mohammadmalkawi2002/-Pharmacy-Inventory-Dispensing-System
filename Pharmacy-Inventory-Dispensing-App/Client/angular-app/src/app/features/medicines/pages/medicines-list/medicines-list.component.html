@@ -1,0 +1,220 @@
+<div class="medicines-page space-y-6 animate-fade-in">
+  <!-- Page Header -->
+  <div class="card-glass p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-blue-100 text-primary flex items-center justify-center text-xl font-bold">
+        <i class="pi pi-box"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-surface-900 tracking-tight">Medicine Formulary</h2>
+        <p class="text-sm text-surface-500">Manage pharmaceutical inventory, stock quotas, and active formulations.</p>
+      </div>
+    </div>
+    <p-button
+      *hasPermission="Permissions.MedicinesCreate"
+      label="Add New Medicine"
+      icon="pi pi-plus"
+      severity="primary"
+      styleClass="shadow"
+      (onClick)="openCreateDialog()" />
+  </div>
+
+  <!-- Tabs + Search Filter Toolbar -->
+  <div class="card-glass p-6 space-y-4">
+    <div class="tabs-container flex items-center gap-2 border-b border-surface-200 pb-3">
+      <button class="tab-pill-btn" [class.tab-active]="activeTab === 'all'" (click)="switchTab('all')">
+        <i class="pi pi-list mr-1"></i> All Formulations
+      </button>
+      <button *hasPermission="Permissions.MedicinesReadLowStock" class="tab-pill-btn tab-warning" [class.tab-active]="activeTab === 'low-stock'" (click)="switchTab('low-stock')">
+        <i class="pi pi-exclamation-triangle mr-1"></i> Low Stock Alerts
+      </button>
+      <button *hasPermission="Permissions.MedicinesDelete" class="tab-pill-btn" [class.tab-active]="activeTab === 'archived'" (click)="switchTab('archived')">
+        <i class="pi pi-inbox mr-1"></i> Archived
+      </button>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-surface-50 p-4 rounded-xl border border-surface-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end mt-2 shadow-sm">
+      
+      @if (activeTab !== 'archived') {
+        <!-- Form Filter -->
+        <div class="lg:col-span-2 flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-surface-600 uppercase tracking-wider">Form</label>
+          <p-select 
+            [options]="formOptions" 
+            [(ngModel)]="formFilter" 
+            optionLabel="label" 
+            optionValue="value"
+            (onChange)="onFilterChange()"
+            placeholder="All Forms" 
+            appendTo="body"
+            styleClass="w-full text-sm" />
+        </div>
+
+        <!-- Stock Unit Filter -->
+        <div class="lg:col-span-2 flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-surface-600 uppercase tracking-wider">Unit</label>
+          <p-select 
+            [options]="stockUnitOptions" 
+            [(ngModel)]="stockUnitFilter" 
+            optionLabel="label" 
+            optionValue="value"
+            (onChange)="onFilterChange()"
+            placeholder="All Units" 
+            appendTo="body"
+            styleClass="w-full text-sm" />
+        </div>
+
+        <!-- Status Filter -->
+        <div class="lg:col-span-2 flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-surface-600 uppercase tracking-wider">Status</label>
+          <p-select 
+            [options]="statusOptions" 
+            [(ngModel)]="isActiveFilter" 
+            optionLabel="label" 
+            optionValue="value"
+            (onChange)="onFilterChange()"
+            placeholder="Any Status" 
+            appendTo="body"
+            styleClass="w-full text-sm" />
+        </div>
+      }
+
+      <!-- Search Input -->
+      <div class="flex flex-col gap-1.5" [class]="activeTab === 'archived' ? 'sm:col-span-2 lg:col-span-10' : 'sm:col-span-2 lg:col-span-4'">
+        <label class="text-xs font-bold text-surface-600 uppercase tracking-wider">Search Medicines</label>
+        <div class="relative">
+          <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchQuery"
+            (keyup.enter)="onFilterChange()"
+            placeholder="Search by name, code, or strength..."
+            class="w-full !pl-12 py-2.5 text-sm" />
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="lg:col-span-2 flex items-center gap-2 h-[42px]">
+        <p-button
+          icon="pi pi-search"
+          label="Search"
+          severity="primary"
+          styleClass="h-full px-5 shadow-sm font-bold"
+          (onClick)="onFilterChange()" />
+        <p-button
+          icon="pi pi-filter-slash"
+          severity="secondary"
+          [text]="true"
+          styleClass="h-full"
+          (onClick)="clearFilters()"
+          pTooltip="Clear filters" />
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <app-loading text="Loading formulary catalog..." />
+  }
+
+  <!-- Medicine Table -->
+  <div class="card-glass p-6 overflow-hidden" [class.hidden]="isLoading()">
+    <p-table
+      [value]="medicines()"
+      [paginator]="true"
+      [rows]="pageSize"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onLazyLoad)="onPageChange($event)"
+      [tableStyle]="{ 'min-width': '70rem' }"
+      responsiveLayout="scroll">
+
+      <ng-template #header>
+        <tr>
+          <th style="width: 120px;">Code</th>
+          <th>Medicine Name</th>
+          <th>Strength</th>
+          <th>Form</th>
+          <th>Stock Unit</th>
+          <th class="text-center" pSortableColumn="QuantityInStock">In Stock <p-sorticon field="QuantityInStock"></p-sorticon></th>
+          <th class="text-center">Reorder Level</th>
+          <th class="text-center">Stock Status</th>
+          <th class="text-center">State</th>
+          <th class="text-center" style="width: 180px;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-medicine>
+        <tr>
+          <td class="whitespace-nowrap">
+            <span class="font-mono text-xs font-bold px-2 py-1 bg-surface-100 rounded text-primary">
+              {{ medicine.code }}
+            </span>
+          </td>
+          <td>
+            <span class="font-bold text-surface-900 block text-sm truncate max-w-xs" [pTooltip]="medicine.name" tooltipPosition="top">{{ medicine.name }}</span>
+          </td>
+          <td class="text-sm text-surface-700 whitespace-nowrap">{{ medicine.strength }}</td>
+          <td class="whitespace-nowrap">
+            <span class="text-xs px-2 py-0.5 rounded-full bg-surface-100 text-surface-600 font-medium">
+              {{ medicine.form }}
+            </span>
+          </td>
+          <td class="text-sm text-surface-500 whitespace-nowrap">{{ medicine.stockUnit }}</td>
+          <td class="text-center font-bold text-base whitespace-nowrap" [class.text-red-600]="medicine.quantityInStock <= medicine.reorderLevel">
+            {{ medicine.quantityInStock }}
+          </td>
+          <td class="text-center text-sm text-surface-500 font-mono whitespace-nowrap">{{ medicine.reorderLevel }}</td>
+          <td class="text-center whitespace-nowrap">
+            <p-tag [value]="medicine.stockStatus" [severity]="getStockSeverity(medicine.stockStatus)" />
+          </td>
+          <td class="text-center whitespace-nowrap">
+            <p-tag [value]="medicine.isActive ? 'Active' : 'Inactive'" [severity]="medicine.isActive ? 'success' : 'secondary'" />
+          </td>
+          <td class="text-center whitespace-nowrap">
+            <div class="flex justify-end items-center gap-1">
+              @if (activeTab !== 'archived') {
+                <p-button *hasPermission="Permissions.MedicinesUpdate" 
+                  class="hidden xl:inline-flex" 
+                  icon="pi pi-inbox" 
+                  label="Receive" 
+                  [rounded]="true" 
+                  severity="info" 
+                  size="small" 
+                  [outlined]="true"
+                  (onClick)="navigateToReceiveStock(medicine)" />
+                  
+                <p-button *hasPermission="Permissions.MedicinesUpdate" 
+                  class="xl:hidden" 
+                  icon="pi pi-inbox" 
+                  pTooltip="Receive Stock" 
+                  [rounded]="true" 
+                  severity="info" 
+                  [text]="true"
+                  (onClick)="navigateToReceiveStock(medicine)" />
+              }
+              <p-button *hasPermission="[Permissions.MedicinesUpdate, Permissions.MedicinesDelete, Permissions.MedicinesActivate, Permissions.MedicinesDeactivate]" 
+                icon="pi pi-ellipsis-v" [text]="true" [rounded]="true" severity="secondary" (onClick)="showMedicineActions($event, medicine, menu)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="10" class="p-0">
+            <app-empty-state
+              [title]="activeTab === 'low-stock' ? 'No Low-Stock Items' : 'No Medicines Found'"
+              [description]="activeTab === 'low-stock' ? 'All formulary items are safely above minimum reorder thresholds.' : 'Try adjusting your search criteria or register a new medication.'"
+              [actionLabel]="activeTab === 'all' ? 'Add Medicine' : undefined"
+              (action)="openCreateDialog()" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Medicine Action Menu -->
+<p-menu #menu [popup]="true" [model]="actionMenuItems()" appendTo="body" />

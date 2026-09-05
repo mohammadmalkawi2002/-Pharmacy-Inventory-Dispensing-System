@@ -1,0 +1,45 @@
+:host {
+  display: block;
+}
+
+.tabs-container {
+  overflow-x: auto;
+}
+
+.tab-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-color-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.tab-pill-btn:hover {
+  background: var(--surface-100);
+  color: var(--text-color);
+}
+
+.tab-pill-btn.tab-active {
+  background: var(--primary-color-light);
+  color: var(--primary-color-dark);
+  border-color: rgba(2, 132, 199, 0.2);
+}
+
+[data-theme='dark'] .tab-pill-btn.tab-active {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--primary-color);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.tab-warning.tab-active {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}

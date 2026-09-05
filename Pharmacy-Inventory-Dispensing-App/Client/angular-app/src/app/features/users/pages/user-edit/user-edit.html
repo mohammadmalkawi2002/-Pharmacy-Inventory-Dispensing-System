@@ -1,0 +1,33 @@
+<div class="user-edit-page space-y-6 animate-fade-in">
+  <div class="card-glass p-6 md:p-8">
+    <div class="flex items-center gap-4 mb-6 border-b border-surface-200 pb-4">
+      <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-xl font-bold">
+        <i class="pi pi-user-edit"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-surface-900 tracking-tight">Update Staff Account</h2>
+        <p class="text-sm text-surface-500">Modify permissions, details, and access levels.</p>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="py-12">
+        <app-loading text="Retrieving user details..." />
+      </div>
+    } @else if (user()) {
+      <app-user-form 
+        [user]="user()"
+        [isSubmitting]="isSubmitting()"
+        (save)="onSave($event)"
+        (cancel)="onCancel()" />
+    } @else {
+      <div class="py-12">
+        <app-empty-state 
+          title="Data Unavailable"
+          description="The requested user record could not be found or failed to load."
+          actionLabel="Return to Directory"
+          (action)="onCancel()" />
+      </div>
+    }
+  </div>
+</div>

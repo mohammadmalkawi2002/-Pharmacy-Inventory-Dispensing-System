@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
+using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Dtos;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;
@@ -78,6 +79,21 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositor
                 cancellationToken);
         }
 
+
+
+        public async Task<IReadOnlyList<Medicine>> GetByIdsAsync(
+            IReadOnlyCollection<Guid> medicineIds,
+            CancellationToken cancellationToken = default)
+        {
+                
+          return await context.Medicines
+                .AsNoTracking()
+                .Where(medicine => medicineIds.Contains(medicine.Id))
+                .ToListAsync(cancellationToken);
+
+        }
+
+
         public async Task<Medicine?> GetByIdIncludingArchivedAsync(
             Guid medicineId,
             CancellationToken cancellationToken = default)
@@ -134,9 +150,20 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositor
             return (medicines, totalCount);
         }
 
+
+
+
+
+
+
+
         public async Task<(IReadOnlyList<Medicine> Items, int TotalCount)> GetLowStockPagedAsync(
             string? searchTerm,
+            MedicineForm? form,
+            StockUnit? StockUnit,
             bool? isActive,
+             string? sortBy,
+             bool isDescending,
             int pageNumber,
             int pageSize,
             CancellationToken cancellationToken = default)
@@ -150,15 +177,32 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositor
                 query=query.Where(medicine=>medicine.IsActive == isActive.Value);
             }
 
-            query=ApplySearch(query, searchTerm);
+            if (form.HasValue)
+            {
+                query = query.Where(medicine => medicine.Form == form.Value);
+            }
+
+
+            if (StockUnit.HasValue)
+            {
+                query = query.Where(medicine => medicine.StockUnit == StockUnit.Value);
+
+            }
+
+
+                query =ApplySearch(query, searchTerm);
 
 
             int totalCount = await query.CountAsync(cancellationToken);
 
-            IReadOnlyList<Medicine> medicines = await query
-                .OrderBy(medicine => medicine.QuantityInStock)
-                .ThenByDescending(medicine => medicine.CreatedAtUtc)
-                .ThenBy(medicine => medicine.Id)
+
+
+                IOrderedQueryable<Medicine> orderedQuery = ApplySorting(
+                query,
+                sortBy,
+                isDescending);
+
+                IReadOnlyList<Medicine> medicines =await orderedQuery
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -240,6 +284,39 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositor
             };
         }
 
-      
+        /// <summary>
+        /// this method used in frontend to use when selelct  Medicnies from dropdown in CreatePrescription
+        /// </summary>
+        /// <param name="searchTerm">by Code Or Name</param>
+        /// <param name="limit">the number of Medicnies returned</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Active and Not Archived Medicines </returns>
+
+        public async Task<List<MedicineLookupDto>> SearchForLookupAsync(
+            string searchTerm,
+            int limit,
+            CancellationToken cancellationToken = default)
+        {
+            string normalizedSearchTerm = searchTerm.Trim();
+
+
+            return await context.Medicines
+                .AsNoTracking()
+                .Where(medicine =>
+                    medicine.IsActive &&
+                    (medicine.Name.Contains(normalizedSearchTerm) ||
+                     medicine.Code.StartsWith(normalizedSearchTerm)))
+                .OrderBy(medicine => medicine.Name)
+                .ThenBy(medicine => medicine.Id)
+                .Take(limit)
+                .Select(medicine => new MedicineLookupDto(
+                    medicine.Id,
+                    medicine.Code,
+                    medicine.Name,
+                    medicine.Strength,
+                    medicine.Form,
+                    medicine.StockUnit))
+                .ToListAsync(cancellationToken);
+        }
     }
 }

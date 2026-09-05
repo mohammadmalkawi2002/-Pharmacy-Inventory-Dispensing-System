@@ -1,0 +1,67 @@
+<form [formGroup]="patientForm" (ngSubmit)="onSubmit()" class="space-y-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Document ID -->
+    <div class="form-field">
+      <label class="form-label">Document ID <span class="text-red-500">*</span></label>
+      <input pInputText formControlName="documentId" placeholder="e.g. 1088923456" class="w-full" />
+      @if (patientForm.get('documentId')?.hasError('required') && patientForm.get('documentId')?.touched) {
+      <small class="form-error">Document ID is required.</small>
+      }
+      @if (patientForm.get('documentId')?.hasError('pattern') && patientForm.get('documentId')?.touched) {
+      <small class="form-error">Document ID must consist of 10 digits and start with 1 or 2.</small>
+      }
+    </div>
+
+    <!-- Full Name -->
+    <div class="form-field">
+      <label class="form-label">Full Name <span class="text-red-500">*</span></label>
+      <input pInputText formControlName="fullName" placeholder="e.g. John Smith" class="w-full" />
+      @if (patientForm.get('fullName')?.hasError('required') && patientForm.get('fullName')?.touched) {
+      <small class="form-error">Full name is required.</small>
+      }
+      @if (patientForm.get('fullName')?.hasError('maxlength') && patientForm.get('fullName')?.touched) {
+      <small class="form-error">Full name must not exceed 200 characters.</small>
+      }
+    </div>
+
+    <!-- Date of Birth -->
+    <div class="form-field">
+      <label class="form-label">Date of Birth <span class="text-red-500">*</span></label>
+      <input pInputText type="date" formControlName="dateOfBirth" [max]="todayString" class="w-full" />
+      @if (patientForm.get('dateOfBirth')?.hasError('required') && patientForm.get('dateOfBirth')?.touched) {
+      <small class="form-error">Date of birth is required.</small>
+      }
+      @if (patientForm.get('dateOfBirth')?.hasError('futureDate') && patientForm.get('dateOfBirth')?.touched) {
+      <small class="form-error">Date of birth cannot be in the future.</small>
+      }
+    </div>
+
+    <!-- Phone Number -->
+    <div class="form-field">
+      <label class="form-label">Phone Number <span class="text-red-500">*</span></label>
+      <input pInputText formControlName="phoneNumber" placeholder="e.g. +1234567890" class="w-full" />
+      @if (patientForm.get('phoneNumber')?.hasError('required') && patientForm.get('phoneNumber')?.touched) {
+      <small class="form-error">Phone number is required.</small>
+      }
+      @if (patientForm.get('phoneNumber')?.hasError('pattern') && patientForm.get('phoneNumber')?.touched) {
+      <small class="form-error">Phone number must contain between 9 and 15 digits and may start with '+'.</small>
+      }
+      @if (
+      patientForm.get('phoneNumber')?.hasError('maxlength') &&
+      patientForm.get('phoneNumber')?.touched
+      ) {
+      <small class="form-error">
+        Phone number must not exceed 16 characters.
+      </small>
+      }
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex items-center justify-end gap-3 pt-6 mt-4 border-t border-surface-200">
+    <p-button type="button" label="Cancel" [text]="true" severity="secondary" (onClick)="cancel.emit()" />
+    <p-button type="submit" [label]="isSubmitting ? 'Saving...' : (patient ? 'Update Patient' : 'Create Patient')"
+      [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'" [disabled]="isSubmitting" severity="primary"
+      styleClass="shadow" />
+  </div>
+</form>

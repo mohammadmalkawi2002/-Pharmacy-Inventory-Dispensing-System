@@ -1,0 +1,82 @@
+<form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-4">
+  <!-- Name Fields -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="form-field">
+      <label class="form-label">First Name <span class="text-red-500">*</span></label>
+      <input pInputText formControlName="firstName" placeholder="e.g. Sarah" class="w-full" />
+      @if (userForm.get('firstName')?.hasError('required') && userForm.get('firstName')?.touched) {
+        <small class="form-error">First name is required.</small>
+      }
+      @if (userForm.get('firstName')?.hasError('minlength') && userForm.get('firstName')?.touched) {
+        <small class="form-error">First name must be at least 2 characters.</small>
+      }
+    </div>
+    <div class="form-field">
+      <label class="form-label">Last Name <span class="text-red-500">*</span></label>
+      <input pInputText formControlName="lastName" placeholder="e.g. Jenkins" class="w-full" />
+      @if (userForm.get('lastName')?.hasError('required') && userForm.get('lastName')?.touched) {
+        <small class="form-error">Last name is required.</small>
+      }
+      @if (userForm.get('lastName')?.hasError('minlength') && userForm.get('lastName')?.touched) {
+        <small class="form-error">Last name must be at least 2 characters.</small>
+      }
+    </div>
+  </div>
+
+  <!-- Email -->
+  <div class="form-field">
+    <label class="form-label">Official Work Email <span class="text-red-500">*</span></label>
+    <input pInputText type="email" formControlName="email" placeholder="e.g. s.jenkins@pharmacare.org" class="w-full" />
+    @if (userForm.get('email')?.hasError('required') && userForm.get('email')?.touched) {
+      <small class="form-error">Work email is required.</small>
+    }
+    @if (userForm.get('email')?.hasError('email') && userForm.get('email')?.touched) {
+      <small class="form-error">Please enter a valid email address.</small>
+    }
+  </div>
+
+  <!-- Role -->
+  <div class="form-field">
+    <label class="form-label">Assigned Authorization Role <span class="text-red-500">*</span></label>
+    <p-select 
+      formControlName="role" 
+      [options]="roleOptions" 
+      optionLabel="label" 
+      optionValue="value" 
+      placeholder="Select System Role..." 
+      styleClass="w-full" 
+      appendTo="body" />
+  </div>
+
+  <!-- Password -->
+  @if (!user) {
+    <div class="form-field">
+      <label class="form-label">Initial Access Password <span class="text-red-500">*</span></label>
+      <p-password 
+        formControlName="password" 
+        [toggleMask]="true" 
+        styleClass="w-full" 
+        inputStyleClass="w-full"
+        [feedback]="false"
+        placeholder="Minimum 8 characters" />
+      @if (userForm.get('password')?.hasError('required') && userForm.get('password')?.touched) {
+        <small class="form-error">Password is required.</small>
+      }
+      @if (userForm.get('password')?.hasError('minlength') && userForm.get('password')?.touched) {
+        <small class="form-error">Password must contain at least 8 characters.</small>
+      }
+    </div>
+  }
+
+  <!-- Actions -->
+  <div class="pt-6 mt-4 border-t border-surface-200 flex justify-end gap-3">
+    <p-button type="button" label="Cancel" [text]="true" severity="secondary" (onClick)="cancel.emit()" />
+    <p-button 
+      type="submit" 
+      [label]="isSubmitting ? 'Saving...' : (user ? 'Update Staff Member' : 'Create Staff Member')" 
+      [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'" 
+      [disabled]="isSubmitting" 
+      severity="primary" 
+      styleClass="shadow" />
+  </div>
+</form>

@@ -15,7 +15,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositor
 
         public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-              await context.SaveChangesAsync();
+              await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

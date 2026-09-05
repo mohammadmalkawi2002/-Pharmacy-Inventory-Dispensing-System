@@ -1,3 +1,4 @@
+using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Dtos;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
 using System;
@@ -17,6 +18,16 @@ namespace PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Reposi
             Guid medicineId,
             bool trackChanges = false,
             CancellationToken cancellationToken = default);
+
+        Task<List<MedicineLookupDto>> SearchForLookupAsync(
+             string searchTerm,
+             int limit,
+             CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<Medicine>> GetByIdsAsync(
+    IReadOnlyCollection<Guid> medicineIds,
+    CancellationToken cancellationToken = default);
+
 
         Task<Medicine?> GetByIdIncludingArchivedAsync(
             Guid medicineId,
@@ -47,10 +58,13 @@ namespace PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Reposi
 
         Task<(IReadOnlyList<Medicine> Items, int TotalCount)> GetLowStockPagedAsync(
              string? searchTerm,
-             bool? isActive,
-             int pageNumber,
-             int pageSize,
-             CancellationToken cancellationToken = default);
+            MedicineForm? form,
+            StockUnit? StockUnit,
+            bool? isActive,
+             string? sortBy,
+             bool isDescending,
+            int pageNumber,
+            int pageSize,CancellationToken cancellationToken);
 
         Task<(IReadOnlyList<Medicine> Items, int TotalCount)> GetArchivedPagedAsync(
             string? searchTerm,

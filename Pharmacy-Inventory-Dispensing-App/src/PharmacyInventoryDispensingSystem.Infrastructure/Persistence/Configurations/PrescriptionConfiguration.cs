@@ -16,7 +16,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
 
             builder.Property(p => p.PrescriptionNumber)
                 .IsRequired()
-                .HasMaxLength(20);
+                .HasMaxLength(9);
 
 
             //index:
@@ -42,6 +42,8 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
             builder.Property(p => p.Status)
                 .IsRequired()
                 .HasConversion<int>();
+
+
             //Relationships:
             builder.HasMany(p => p.Items)
                 .WithOne(i => i.Prescription)
@@ -61,9 +63,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
 
             
 
-            //Qyery filter: 
-            builder.HasQueryFilter(p => !p.IsDeleted);
-
+            
 
 
 

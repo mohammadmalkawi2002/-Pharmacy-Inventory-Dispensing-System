@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Common;
+using PharmacyInventoryDispensingSystem.Application.Features.Patients.Dtos;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Patients;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,10 @@ namespace PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Reposi
             Patient patient,
             CancellationToken cancellationToken = default);
 
+        Task<List<PatientLookupDto>> SearchForLookupAsync(
+            string searchTerm,
+            int limit,
+            CancellationToken cancellationToken = default);
         Task<Patient?> GetByIdAsync(
         Guid patientId,
          bool trackChanges = false,
