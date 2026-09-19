@@ -20,7 +20,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Seed
     {
 
         internal const string AdminEmail = "mohammadmalkawi681@gmail.com";
-        internal const string AdminPassword = "Admin@12345!";
+        internal const string AdminPassword = "Admin@123!";
         internal const string PharmacistEmail = "pharmacist@pharmacy.local";
         internal const string DoctorEmail = "doctor@pharmacy.local";
         internal const string ReceptionistEmail = "receptionist@pharmacy.local";
