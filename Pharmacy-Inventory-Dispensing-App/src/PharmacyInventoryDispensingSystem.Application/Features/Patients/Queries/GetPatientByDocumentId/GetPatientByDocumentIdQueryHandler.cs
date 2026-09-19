@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Errors;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
@@ -14,16 +15,15 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.GetPatientByDocumentId
 {
-    public sealed class GetPatientByDocumentIdQueryHandler(IPatientRepository patientRepository,
+    public sealed class GetPatientByDocumentIdQueryHandler(IGenericRepository<Patient> patientRepository,
         ILogger<GetPatientByDocumentIdQueryHandler> logger)
         : IRequestHandler<GetPatientByDocumentIdQuery, Result<PatientResponseDto>>
     {
         public async Task<Result<PatientResponseDto>> Handle(GetPatientByDocumentIdQuery request, CancellationToken cancellationToken)
         {
-            var patient = await patientRepository.GetByDocumentIdAsync(
-                request.DocumentId,
-                cancellationToken);
-
+            var patient = await patientRepository.Query()
+                            .SingleOrDefaultAsync(p => p.DocumentId == request.DocumentId, cancellationToken);
+                  
             if (patient is null)
             {
                 logger.LogWarning(

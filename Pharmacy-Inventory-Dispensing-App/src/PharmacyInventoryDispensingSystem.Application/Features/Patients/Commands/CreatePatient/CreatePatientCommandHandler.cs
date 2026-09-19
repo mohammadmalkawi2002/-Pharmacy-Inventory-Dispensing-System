@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Errors;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
@@ -13,7 +14,7 @@ using System.Text;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Commands.CreatePatient
 {
     public sealed class CreatePatientCommandHandler(
-        IPatientRepository patientRepository,
+      IPatientRepository patientRepository,
         IUnitOfWork unitOfWork,
         ILogger<CreatePatientCommandHandler> logger)
         : IRequestHandler<CreatePatientCommand, Result<PatientResponseDto>>
@@ -23,10 +24,8 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Comman
 
           var documentId=request.DocumentId.Trim();
 
-            //→ Check DocumentId uniqueness:
-            var documentIdExists = await patientRepository.ExistsByDocumentIdAsync(
-              documentId,
-              cancellationToken: cancellationToken);
+            //→ Check DocumentId uniqueness (including archived):
+            var documentIdExists = await patientRepository.ExistsByDocumentIdAsync(documentId, cancellationToken);
 
             if (documentIdExists) 
             {
@@ -45,7 +44,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Comman
 
             };
 
-            await patientRepository.AddAsync(patient, cancellationToken);
+            patientRepository.Add(patient);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

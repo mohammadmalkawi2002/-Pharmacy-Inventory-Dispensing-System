@@ -6,12 +6,9 @@ using System.Text;
 
 namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositories
 {
-    public class UnitOfWork(AppDbContext context) : IUnitOfWork
+    public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
     {
-        public void Dispose()
-        {
-            context.Dispose();
-        }
+        
 
         public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
         {

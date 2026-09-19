@@ -5,6 +5,7 @@ using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositori
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Dtos;
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Mappers;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Patients;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,17 +13,18 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.GetPatientById
 {
-    public sealed class GetPatientByIdQueryHandler(IPatientRepository patientRepository
-        ,ILogger<GetPatientByIdQueryHandler> logger)
+    public sealed class GetPatientByIdQueryHandler(
+        IGenericRepository<Patient> patientRepository,
+        ILogger<GetPatientByIdQueryHandler> logger)
         : IRequestHandler<GetPatientByIdQuery, Result<PatientResponseDto>>
     {
         public async Task<Result<PatientResponseDto>> Handle(
             GetPatientByIdQuery query,
             CancellationToken cancellationToken)
         {
-            var patient= await patientRepository.GetByIdAsync(
+            var patient = await patientRepository.GetByIdAsync(
                 query.PatientId,
-                cancellationToken: cancellationToken);
+                cancellationToken);
 
             if (patient is null) 
             {

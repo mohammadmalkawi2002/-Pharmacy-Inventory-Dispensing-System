@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Errors;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Patients;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,7 +12,7 @@ using System.Text;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Commands.RestorePatient
 {
     public sealed class RestorePatientCommandHandler(
-        IPatientRepository patientRepository,
+         IGenericRepository<Patient> patientRepository,
         IUnitOfWork unitOfWork,
         ILogger<RestorePatientCommandHandler> logger) : IRequestHandler<RestorePatientCommand, Result<Updated>>
 
@@ -20,9 +22,11 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Comman
         public async Task<Result<Updated>> Handle(
             RestorePatientCommand request,
             CancellationToken cancellationToken)
-        {
+        { 
 
-            var patient=await patientRepository.GetByIdIncludingArchivedAsync(request.PatientId,cancellationToken);
+            var patient = await patientRepository
+                .QueryIncludingDeleted(trackChanges: true)
+                .FirstOrDefaultAsync(p => p.Id == request.PatientId, cancellationToken);
 
             if (patient is null) 
             {
@@ -43,7 +47,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Comman
             }
 
             patient.Restore();
-
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Patient {PatientId} was restored successfully.",request.PatientId);

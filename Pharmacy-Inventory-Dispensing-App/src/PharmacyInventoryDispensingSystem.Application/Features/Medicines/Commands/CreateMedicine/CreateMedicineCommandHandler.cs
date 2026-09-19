@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Dtos;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.CreateMedicine
 {
     public sealed class CreateMedicineCommandHandler(
-        IMedicineRepository medicineRepository,
+         IMedicineRepository medicineRepository,
         IUnitOfWork unitOfWork,
         ILogger<CreateMedicineCommandHandler> logger)
         : IRequestHandler<CreateMedicineCommand, Result<MedicineDetailsResponseDto>>
@@ -22,9 +23,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
         {
             var code = request.Code.Trim();
 
-            var codeExists = await medicineRepository.ExistsByCodeAsync(
-                code,
-                cancellationToken);
+            var codeExists = await medicineRepository.ExistsByCodeAsync(code, cancellationToken);
 
             if (codeExists)
             {
@@ -38,18 +37,16 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
                 Name = request.Name.Trim(),
                 Strength = request.Strength.Trim(),
                 Form = request.Form,
-
                 StockUnit = request.StockUnit,
                 PackageUnit = request.PackageUnit,
                 UnitsPerPackage = request.UnitsPerPackage,
-
                 ReorderLevel = request.ReorderLevel,
                 IsActive = true
 
 
             };
 
-            await medicineRepository.AddAsync(medicine, cancellationToken);
+            medicineRepository.Add(medicine);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Medicine {MedicineId} was created successfully.", medicine.Id);

@@ -51,6 +51,11 @@ namespace PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions
             Error.Conflict(
                 code: "Prescription.CannotCancelExpired",
                 description: "An expired prescription cannot be cancelled.");
+
+        public static Error CannotCancelDispensed =>
+           Error.Conflict(
+               code: "Prescription.CannotCancelDispensed",
+               description: "A Dispensed prescription cannot be cancelled.");
     }
 
 

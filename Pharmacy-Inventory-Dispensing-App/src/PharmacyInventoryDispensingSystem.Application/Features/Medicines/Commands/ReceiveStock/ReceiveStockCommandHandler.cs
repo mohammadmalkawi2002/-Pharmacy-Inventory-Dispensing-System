@@ -11,7 +11,7 @@ using System.Text;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.ReceiveStock
 {
     public sealed class ReceiveStockCommandHandler(
-     IMedicineRepository medicineRepository,
+       IGenericRepository<Medicine> medicineRepository,
      IUnitOfWork unitOfWork,
      ILogger<ReceiveStockCommandHandler> logger)
      : IRequestHandler<ReceiveStockCommand, Result<ReceiveStockResponseDto>>
@@ -20,7 +20,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
         {
             var medicine = await medicineRepository.GetByIdAsync(
                 request.MedicineId,
-                trackChanges: true,
                 cancellationToken);
 
 
@@ -53,6 +52,8 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
 
                 return increaseStockResult.TopError;
             }
+
+            medicineRepository.Update(medicine);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
 

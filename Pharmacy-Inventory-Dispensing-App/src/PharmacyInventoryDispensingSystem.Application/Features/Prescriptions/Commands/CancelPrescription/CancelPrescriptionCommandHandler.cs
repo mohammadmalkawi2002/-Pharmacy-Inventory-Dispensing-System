@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Authorization;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
 using System;
@@ -12,7 +14,8 @@ using System.Text;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Commands.CancelPrescription
 {
     public sealed class CancelPrescriptionCommandHandler(
-    IPrescriptionRepository prescriptionRepository,
+     IGenericRepository<Prescription> prescriptionRepository,
+     IGenericRepository<Dispense> dispenseRepository, 
     IPrescriptionAuthorizationService prescriptionAuthorizationService,
     IUnitOfWork unitOfWork,
     ILogger<CancelPrescriptionCommandHandler> logger)
@@ -22,7 +25,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.C
             CancelPrescriptionCommand request,
             CancellationToken cancellationToken)
         {
-            var prescription=await prescriptionRepository.GetByIdForCancellationAsync(
+            var prescription=await prescriptionRepository.GetByIdAsync(
                 request.PrescriptionId,
                 cancellationToken);
 
@@ -35,7 +38,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.C
                 return PrescriptionErrors.NotFound(request.PrescriptionId);
             }
 
-            // Check if the user is authorized to cancel the prescription:
+            // Check if the user is authorized to cancel the prescription(each doctor can cancle his prescription):
 
             bool canAccess=await prescriptionAuthorizationService.CanAccessAsync(
                 prescription,
@@ -75,11 +78,19 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.C
                 return PrescriptionErrors.CannotCancelExpired;
             }
 
+            bool hasDispensingHistory = await dispenseRepository.Query()
+                                    .AnyAsync(d=>d.PrescriptionId == prescription.Id,cancellationToken);
+
+            if (hasDispensingHistory)
+            {
+                logger.LogWarning("Prescription {PrescriptionId} cannot be cancelled because it has already been dispensed.", prescription.Id);
+                return PrescriptionErrors.CannotCancelDispensed;
+            }
 
             // Cancel the prescription:
-
             prescription.Status = PrescriptionStatus.Cancelled;
-
+            // Update is required because GetByIdAsync returns an untracked entity
+            prescriptionRepository.Update(prescription);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation(
@@ -87,8 +98,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.C
            prescription.Id);
 
             return Result.Updated;
-
-
 
         }
     }

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.RestoreMedicine
 {
     public sealed class RestoreMedicineCommandHandler(
-        IMedicineRepository medicineRepository,
+      IGenericRepository<Medicine> medicineRepository,
         IUnitOfWork unitOfWork,
         ILogger<RestoreMedicineCommandHandler> logger)
         : IRequestHandler<RestoreMedicineCommand, Result<Updated>>
@@ -18,9 +19,10 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
             RestoreMedicineCommand request,
             CancellationToken cancellationToken)
         {
-            var medicine = await medicineRepository.GetByIdIncludingArchivedAsync(
-                request.MedicineId,
-                cancellationToken);
+            // MustBypass global query filter and track changes so Restore works:
+            var medicine = await medicineRepository
+                        .QueryIncludingDeleted(trackChanges:true)
+                        .FirstOrDefaultAsync(m=>m.Id==request.MedicineId,cancellationToken);
 
             if (medicine is null)
             {

@@ -55,6 +55,8 @@ public sealed class Medicine : SoftDeletableEntity
 
     public bool IsActive { get; set; }
 
+    public byte[] RowVersion { get; private set; } = null!;
+
     public ICollection<PrescriptionItem> PrescriptionItems { get; set; }
         = new List<PrescriptionItem>();
 

@@ -48,6 +48,8 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
             })
             .IsUnique();
 
+            builder.Property(item => item.RowVersion)
+    .IsRowVersion();
 
 
 

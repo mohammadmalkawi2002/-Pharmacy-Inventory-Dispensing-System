@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Errors;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.UpdateMedicine
 {
     public sealed class UpdateMedicineCommandHandler(
-        IMedicineRepository medicineRepository,
+         IMedicineRepository medicineRepository,
         IUnitOfWork unitOfWork,
         ILogger<UpdateMedicineCommandHandler> logger)
         : IRequestHandler<UpdateMedicineCommand, Result<Updated>>
@@ -24,7 +25,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
         {
             var medicine = await medicineRepository.GetByIdAsync(
                 request.MedicineId,
-                trackChanges: true,
                 cancellationToken: cancellationToken);
 
             if (medicine is null)
@@ -33,7 +33,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
                 return MedicineErrors.NotFound(request.MedicineId);
             }
 
-            //→ Check Code Uniqueness
+            //→ Check Code Uniqueness: if code changed only check the code in db (ite mean hit the db only if code changed)
             var code = request.Code.Trim();
             bool codeChanged = !string.Equals(
                 medicine.Code,
@@ -43,9 +43,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
 
             if (codeChanged)
             {
-                var codeExists = await medicineRepository.ExistsByCodeAsync(
-                    code,
-                    cancellationToken);
+                var codeExists = await medicineRepository.ExistsByCodeAsync(code, cancellationToken);
 
                 if (codeExists)
                 {
@@ -84,6 +82,8 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
             medicine.UnitsPerPackage = request.UnitsPerPackage;
             medicine.ReorderLevel = request.ReorderLevel;
 
+            medicineRepository.Update(medicine);
+
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Medicine {MedicineId} was updated successfully.", medicine.Id);
@@ -111,11 +111,9 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
             if (medicine.QuantityInStock > 0)
                 return MedicineErrors.StockConfigurationCannotBeChanged;
 
-            var isUsedInPrescription =
-                await medicineRepository.IsReferencedByPrescriptionAsync(
-                    medicine.Id,
-                    cancellationToken);
-
+            var isUsedInPrescription = await medicineRepository.Query()
+                        .AnyAsync(m => m.Id == medicine.Id && m.PrescriptionItems.Any(),
+                            cancellationToken);
 
 
 
