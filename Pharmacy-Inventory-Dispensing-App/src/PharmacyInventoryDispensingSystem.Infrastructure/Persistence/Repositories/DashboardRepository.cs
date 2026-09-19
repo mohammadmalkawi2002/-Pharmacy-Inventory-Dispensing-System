@@ -9,6 +9,8 @@ using System.Text;
 
 namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositories
 {
+    //TODO:Note later maybe need to add InMemoryCache or add indexes:
+    
     public sealed class DashboardRepository(AppDbContext context)
     : IDashboardRepository
     {

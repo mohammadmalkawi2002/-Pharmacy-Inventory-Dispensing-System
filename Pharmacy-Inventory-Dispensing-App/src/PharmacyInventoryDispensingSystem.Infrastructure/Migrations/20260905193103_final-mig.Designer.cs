@@ -13,7 +13,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260905193103_final-mig")]
-    partial class finalmig
+    partial class FinalMig
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

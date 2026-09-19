@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.ActivateMedicine
 {
     public sealed class ActivateMedicineCommandHandler(
-        IMedicineRepository medicineRepository,
+         IGenericRepository<Medicine> medicineRepository,
         IUnitOfWork unitOfWork,
         ILogger<ActivateMedicineCommandHandler> logger)
         : IRequestHandler<ActivateMedicineCommand, Result<Updated>>
@@ -20,8 +20,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
         {
             var medicine = await medicineRepository.GetByIdAsync(
                 request.MedicineId,
-                trackChanges: true,
-                cancellationToken: cancellationToken);
+                cancellationToken);
 
             if (medicine is null)
             {
@@ -36,6 +35,8 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
             }
 
             medicine.IsActive = true;
+
+            medicineRepository.Update(medicine);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Medicine {MedicineId} was activated successfully.", request.MedicineId);

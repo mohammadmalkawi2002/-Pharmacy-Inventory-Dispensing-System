@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Identity;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.ArchiveMedicine
 {
     public sealed class ArchiveMedicineCommandHandler(
-        IMedicineRepository medicineRepository,
+        IGenericRepository<Medicine> medicineRepository,
         IUnitOfWork unitOfWork,
         ILogger<ArchiveMedicineCommandHandler> logger)
         : IRequestHandler<ArchiveMedicineCommand, Result<Deleted>>
@@ -17,10 +18,10 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
         public async Task<Result<Deleted>> Handle(
             ArchiveMedicineCommand request,
             CancellationToken cancellationToken)
-        {
-            var medicine = await medicineRepository.GetByIdIncludingArchivedAsync(
-                request.MedicineId,
-                cancellationToken);
+        { 
+            var medicine = await medicineRepository
+                            .QueryIncludingDeleted(trackChanges: true)
+                           .FirstOrDefaultAsync(m => m.Id == request.MedicineId, cancellationToken);
 
             if (medicine is null)
             {
@@ -34,7 +35,8 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
                 return MedicineErrors.AlreadyArchived(request.MedicineId);
             }
 
-            medicine.Delete();
+            //Apply softDelete:
+            medicineRepository.Delete(medicine);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Medicine {MedicineId} was archived successfully.", request.MedicineId);

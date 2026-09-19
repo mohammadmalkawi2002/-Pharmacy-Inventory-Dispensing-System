@@ -1,9 +1,15 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Application.Features.Dashboard.Dtos;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Patients;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
+using PharmacyInventoryDispensingSystem.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -34,6 +40,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Dashboard.Queri
             bool isDoctor = currentUser.IsInRole(RoleNames.Doctor);
             bool isPharmacist = currentUser.IsInRole(RoleNames.Pharmacist);
 
+
             int? totalPatients = null;
             int? totalMedicines = null;
             int? lowStockMedicines = null;
@@ -43,26 +50,24 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Dashboard.Queri
             // Patient statistics: Admin, Receptionist, and Doctor.
             if (currentUser.HasPermission(Permissions.Patients.Read))
             {
-                totalPatients =
-                    await dashboardRepository.CountPatientsAsync(
-                        cancellationToken);
+                // The global query filter excludes archived patients.
+                totalPatients = await dashboardRepository.CountPatientsAsync(cancellationToken);
+                   
             }
 
             // Medicine statistics: Admin, Doctor, and Pharmacist.
             if (currentUser.HasPermission(Permissions.Medicines.Read))
             {
-                totalMedicines =
-                    await dashboardRepository.CountMedicinesAsync(
-                        cancellationToken);
+                totalMedicines = await dashboardRepository.CountMedicinesAsync(cancellationToken);
+                    
             }
 
             // Low-stock statistics: Admin and Pharmacist.
             if (currentUser.HasPermission(
                     Permissions.Medicines.ReadLowStock))
             {
-                lowStockMedicines =
-                    await dashboardRepository.CountLowStockMedicinesAsync(
-                        cancellationToken);
+                lowStockMedicines = await dashboardRepository.CountLowStockMedicinesAsync(cancellationToken);
+                   
             }
 
             // Active prescriptions: Admin sees all; Doctor sees their own.
@@ -74,11 +79,8 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Dashboard.Queri
 
                 string? doctorId = isAdmin ? null : userId;
 
-                activePrescriptions =
-                    await dashboardRepository.CountActivePrescriptionsAsync(
-                        today,
-                        doctorId,
-                        cancellationToken);
+                activePrescriptions =await dashboardRepository.CountActivePrescriptionsAsync(today,doctorId, cancellationToken);
+
             }
 
             // Recent dispenses means today's dispensing operations.

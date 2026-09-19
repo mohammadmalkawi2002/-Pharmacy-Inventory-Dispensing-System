@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Authorization;
@@ -14,7 +15,7 @@ using System.Text;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Queries.GetPrescriptionById
 {
     public sealed class GetPrescriptionByIdQueryHandler(
-    IPrescriptionRepository prescriptionRepository,
+     IGenericRepository<Prescription> prescriptionRepository,
     IPrescriptionAuthorizationService prescriptionAuthorizationService,
     IUserLookupService userLookupService,
     ILogger<GetPrescriptionByIdQueryHandler> logger)
@@ -24,9 +25,15 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Q
             GetPrescriptionByIdQuery request,
             CancellationToken cancellationToken)
         {
-            // Retrieve the prescription by ID with details(items medicine  and patient information) from the repository
-            var prescription = await prescriptionRepository.GetByIdWithDetailsAsync(request.
-                PrescriptionId, cancellationToken);
+            // Retrieve the prescription by ID with details(items medicine  and patient information)
+            var prescription = await prescriptionRepository.Query()
+            .Include(p => p.Patient)
+            .Include(p => p.Items)
+                .ThenInclude(item => item.Medicine)
+            .SingleOrDefaultAsync(
+                p =>p.Id== request.PrescriptionId,
+                cancellationToken);
+
 
             if (prescription is null)
             {

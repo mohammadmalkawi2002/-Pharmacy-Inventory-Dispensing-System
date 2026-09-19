@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
@@ -15,7 +16,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Dispenses.Comma
 {
     public sealed class CreateDispenseCommandHandler(
      IPrescriptionRepository prescriptionRepository,
-     IDispenseRepository dispenseRepository,
+      IGenericRepository<Dispense> dispenseRepository ,
      IUnitOfWork unitOfWork,
      ICurrentUser currentUser,
      IUserLookupService userLookupService,
@@ -153,13 +154,30 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Dispenses.Comma
                 });
             }
 
-            // Step 9: Persist the dispense record, stock changes,
-            // and fill-count changes atomically.
-            await dispenseRepository.AddAsync(
-                dispense,
-                cancellationToken);
+           
 
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            try 
+            {
+                // Step 9: Persist the dispense record, stock changes, and fill-count changes atomically.
+                dispenseRepository.Add(dispense);
+                // TEMPORARY: concurrency test only
+
+                //await Task.Delay(TimeSpan.FromSeconds(15),
+        //cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
+            catch(DbUpdateConcurrencyException ex) 
+            {
+                logger.LogWarning(
+                    ex,
+                    "Concurrency conflict occurred while dispensing prescription {PrescriptionId} by pharmacist {PharmacistId}.",
+                    prescription.Id,
+                    pharmacistId);
+                // Return  domain Result error!
+                return DispenseErrors.ConcurrencyConflict;
+            }
+                
 
             logger.LogInformation(
                 "Dispense {DispenseId} was created for prescription {PrescriptionId} by pharmacist {PharmacistId}",

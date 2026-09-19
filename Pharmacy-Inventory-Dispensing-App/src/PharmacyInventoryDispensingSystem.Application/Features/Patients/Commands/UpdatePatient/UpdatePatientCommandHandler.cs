@@ -1,9 +1,11 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Errors;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Dtos;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Patients;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +13,7 @@ using System.Text;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Commands.UpdatePatient
 {
     public sealed class UpdatePatientCommandHandler(
-        IPatientRepository patientRepository,
+         IPatientRepository patientRepository,
         IUnitOfWork unitOfWork,
         ILogger<UpdatePatientCommandHandler> logger)
       : IRequestHandler<
@@ -22,7 +24,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Comman
         {
             var patient=await patientRepository.GetByIdAsync(
                 request.PatientId,
-                trackChanges: true,
                 cancellationToken);
 
             if (patient is null) 
@@ -44,10 +45,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Comman
 
             if (documentIdChanged)
             {
-                var documentIdExists = await patientRepository.ExistsByDocumentIdAsync(
-                    documentId,
-                    cancellationToken);
-
+                var documentIdExists = await patientRepository.ExistsByDocumentIdAsync(documentId, cancellationToken);
 
                 if (documentIdExists)
                 {
@@ -59,12 +57,13 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Comman
                 }
             }
 
-
-
+            //Apply changes:
             patient.DocumentId = documentId;
             patient.FullName=request.FullName.Trim();
             patient.DateOfBirth = request.DateOfBirth.Date;
             patient.PhoneNumber = request.PhoneNumber.Trim();
+
+            patientRepository.Update(patient);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

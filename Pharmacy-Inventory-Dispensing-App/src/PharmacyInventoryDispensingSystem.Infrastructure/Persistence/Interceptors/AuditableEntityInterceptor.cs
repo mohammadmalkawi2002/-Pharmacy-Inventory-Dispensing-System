@@ -89,6 +89,8 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Intercept
                 else if (wasDeleted && !isDeleted)
                 {
                     entry.Entity.RestoredAtUtc = utcNow;
+                    entry.Entity.DeletedAtUtc = null;
+                    entry.Entity.DeletedBy = null;
                 }
 
             }

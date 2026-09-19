@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Application.Features.Dispenses.Dtos;
@@ -11,7 +12,7 @@ using System.Text;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Dispenses.Queries.GetDispenseById
 {
     public sealed class GetDispenseByIdQueryHandler(
-    IDispenseRepository dispenseRepository,
+     IDispenseRepository dispenseRepository,
     IUserLookupService userLookupService)
     : IRequestHandler<GetDispenseByIdQuery, Result<DispenseDetailsDto>>
     {
@@ -21,10 +22,10 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Dispenses.Queri
         {
             // Load the dispense record with its prescription,
             // patient, dispensed items, and medicines.
-            Dispense? dispense =
-                await dispenseRepository.GetByIdWithDetailsAsync(
-                    query.DispenseId,
-                    cancellationToken);
+
+            var dispense = await dispenseRepository.GetDispenseDetailsByIdAsync(
+                query.DispenseId,
+                cancellationToken);
 
             if (dispense is null)
             {

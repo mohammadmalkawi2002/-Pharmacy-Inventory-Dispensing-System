@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicineById
 {
     public sealed class GetMedicineByIdQueryHandler(
-        IMedicineRepository medicineRepository,
+        IGenericRepository<Medicine> medicineRepository,
         ILogger<GetMedicineByIdQueryHandler> logger)
         : IRequestHandler<GetMedicineByIdQuery, Result<MedicineDetailsResponseDto>>
     {
@@ -19,10 +19,11 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queri
             GetMedicineByIdQuery request,
             CancellationToken cancellationToken)
         {
+
             var medicine = await medicineRepository.GetByIdAsync(
                 request.MedicineId,
-                trackChanges: false,
-                cancellationToken: cancellationToken);
+                cancellationToken);
+
 
             if (medicine is null)
             {

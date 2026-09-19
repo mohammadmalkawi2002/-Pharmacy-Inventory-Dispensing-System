@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Dtos;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicineByCode
 {
     public sealed class GetMedicineByCodeQueryHandler(
-        IMedicineRepository medicineRepository,
+         IGenericRepository<Medicine> medicineRepository,
         ILogger<GetMedicineByCodeQueryHandler> logger)
         : IRequestHandler<GetMedicineByCodeQuery, Result<MedicineDetailsResponseDto>>
     {
@@ -21,9 +22,9 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queri
         {
             var code = request.Code.Trim();
 
-            var medicine = await medicineRepository.GetByCodeAsync(
-                code,
-                cancellationToken);
+            var medicine = await medicineRepository.Query()
+                            .FirstOrDefaultAsync(m => m.Code == code, cancellationToken);
+
 
             if (medicine is null)
             {

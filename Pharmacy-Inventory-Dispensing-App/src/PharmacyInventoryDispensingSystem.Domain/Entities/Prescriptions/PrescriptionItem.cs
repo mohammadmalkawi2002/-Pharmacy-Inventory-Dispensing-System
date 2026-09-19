@@ -34,6 +34,8 @@ public class PrescriptionItem : AuditableEntity
 
     public string? DosageInstructions { get; set; }
 
+    public byte[] RowVersion { get; private set; } = null!;
+
     public ICollection<DispenseItem> DispenseItems { get; set; } = [];
 
     public bool HasFillsRemaining =>

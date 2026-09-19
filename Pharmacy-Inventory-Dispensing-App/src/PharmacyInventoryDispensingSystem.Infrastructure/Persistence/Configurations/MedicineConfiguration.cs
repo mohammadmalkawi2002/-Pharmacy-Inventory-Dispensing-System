@@ -97,7 +97,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
             //QueryFilter: 
             builder.HasQueryFilter(m =>! m.IsDeleted);
 
+            //Add row version to protected quentityinStock from concurrency:
 
+            builder.Property(medicine => medicine.RowVersion)
+                .IsRowVersion();
 
 
             

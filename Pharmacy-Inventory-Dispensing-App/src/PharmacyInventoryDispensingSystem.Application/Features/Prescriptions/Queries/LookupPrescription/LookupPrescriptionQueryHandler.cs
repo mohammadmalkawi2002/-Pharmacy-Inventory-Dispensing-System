@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
@@ -15,7 +16,7 @@ using System.Text;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Queries.LookupPrescription
 {
     public sealed class LookupPrescriptionQueryHandler(
-        IPrescriptionRepository prescriptionRepository,
+        IGenericRepository<Prescription> prescriptionRepository,
         IUserLookupService userLookupService,
         ILogger<LookupPrescriptionQueryHandler> logger)
       : IRequestHandler<
@@ -26,10 +27,12 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Q
             LookupPrescriptionQuery request,
             CancellationToken cancellationToken)
         {
-            var prescription=await prescriptionRepository.LookupAsync(
-                request.PrescriptionNumber.Trim(),
-                request.DocumentId.Trim(),
-                cancellationToken);
+            var prescription = await prescriptionRepository.Query()
+                               .Include(p => p.Patient)
+                               .Include(p => p.Items)
+                               .ThenInclude(item => item.Medicine)
+                               .FirstOrDefaultAsync(p => p.PrescriptionNumber == request.PrescriptionNumber.Trim()
+                               && p.Patient.DocumentId == request.DocumentId.Trim(),cancellationToken);
 
             if (prescription is null)
             {

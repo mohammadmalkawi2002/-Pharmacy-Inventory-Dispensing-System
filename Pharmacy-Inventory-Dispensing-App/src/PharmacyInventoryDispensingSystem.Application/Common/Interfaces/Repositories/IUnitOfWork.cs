@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories
 {
-    public interface IUnitOfWork:IDisposable
+    public interface IUnitOfWork
     {
         //add your IRepo
         Task SaveChangesAsync(CancellationToken cancellationToken = default);

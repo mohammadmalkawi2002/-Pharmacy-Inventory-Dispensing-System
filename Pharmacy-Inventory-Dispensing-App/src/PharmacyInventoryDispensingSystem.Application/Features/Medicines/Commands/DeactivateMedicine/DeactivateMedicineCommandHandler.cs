@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.DeactivateMedicine
 {
     public sealed class DeactivateMedicineCommandHandler(
-        IMedicineRepository medicineRepository,
+        IGenericRepository<Medicine> medicineRepository,
         IUnitOfWork unitOfWork,
         ILogger<DeactivateMedicineCommandHandler> logger)
         : IRequestHandler<DeactivateMedicineCommand, Result<Updated>>
@@ -19,9 +19,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
             CancellationToken cancellationToken)
         {
             var medicine = await medicineRepository.GetByIdAsync(
-                request.MedicineId,
-                trackChanges: true,
-                cancellationToken: cancellationToken);
+            request.MedicineId, cancellationToken);
 
             if (medicine is null)
             {
@@ -36,6 +34,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
             }
 
             medicine.IsActive = false;
+            medicineRepository.Update(medicine);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Medicine {MedicineId} was deactivated successfully.", request.MedicineId);

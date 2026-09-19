@@ -14,9 +14,10 @@ namespace PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses
             "Dispense.PrescriptionNotFound",
             "The prescription was not found or does not match the patient document ID.");
 
-        public static readonly Error PatientUnavailable = Error.Conflict(
-            "Dispense.PatientUnavailable",
-            "The patient is unavailable.");
+        public static readonly Error ConcurrencyConflict =
+      Error.Conflict(
+          "Dispense.ConcurrencyConflict",
+          "The medicine stock or prescription item was modified by another operation. Please reload and try again.");
 
         public static readonly Error PrescriptionCancelled = Error.Conflict(
             "Dispense.PrescriptionCancelled",

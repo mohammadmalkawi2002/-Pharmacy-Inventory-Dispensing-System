@@ -1,8 +1,10 @@
-﻿using MediatR;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Authorization;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
+using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
@@ -12,10 +14,11 @@ using System.Text;
 
 namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Commands.UpdatePrescription
 {
+
     public sealed class UpdatePrescriptionCommandHandler(
         IPrescriptionRepository prescriptionRepository,
-        IMedicineRepository medicineRepository,
-        IDispenseRepository dispenseRepository,
+        IGenericRepository<Medicine> medicineRepository,
+        IGenericRepository<Dispense> dispenseRepository,
         IPrescriptionAuthorizationService authorizationService,
         IUnitOfWork unitOfWork,
         ILogger<UpdatePrescriptionCommandHandler> logger)
@@ -26,100 +29,62 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.C
             CancellationToken cancellationToken)
         {
             // 1. Get tracked prescription with items
-            var prescription = await prescriptionRepository.GetByIdAsync(
+            var prescription = await prescriptionRepository.GetByIdWithItemsAsync(
                 request.PrescriptionId,
                 cancellationToken);
 
             if (prescription is null)
             {
-                logger.LogWarning(
-                    "Prescription with ID {PrescriptionId} not found.",
-                    request.PrescriptionId);
-
+                logger.LogWarning("Prescription with ID {PrescriptionId} not found.", request.PrescriptionId);
                 return PrescriptionErrors.NotFound(request.PrescriptionId);
             }
 
-            // 2. Resource-based authorization
-            // Doctor can update only their own prescriptions.
-            // Admin can bypass ownership.
-            bool canAccess = await authorizationService.CanAccessAsync(
-                prescription,
-                cancellationToken);
-
+            // 2. Authorization==>Resource owner-ship doctor only update his prescription
+            bool canAccess = await authorizationService.CanAccessAsync(prescription, cancellationToken);
             if (!canAccess)
             {
-                logger.LogWarning(
-                    "User attempted unauthorized update of prescription {PrescriptionId}.",
-                    prescription.Id);
-
+                logger.LogWarning("User attempted unauthorized update of prescription {PrescriptionId}.", prescription.Id);
                 return PrescriptionErrors.Forbidden;
             }
 
-            // 3. Only Active prescriptions can be updated
+            // 3. Status check
             if (prescription.Status != PrescriptionStatus.Active)
             {
-                logger.LogWarning(
-                    "InActive prescription {PrescriptionId} cannot be updated.",
-                    prescription.Id);
-
+                logger.LogWarning("InActive prescription {PrescriptionId} cannot be updated.", prescription.Id);
                 return PrescriptionErrors.CannotUpdateInActive;
             }
 
-            
-
-            // 4. Once dispensing has started, the prescription is immutable
-            bool hasDispensingHistory =
-                await dispenseRepository.ExistsForPrescriptionAsync(
-                    prescription.Id,
-                    cancellationToken);
+            // 4. Dispensing history check(once has dispensing history updated immutable)
+            bool hasDispensingHistory = await dispenseRepository.Query()
+                .AnyAsync(d => d.PrescriptionId == prescription.Id, cancellationToken);
 
             if (hasDispensingHistory)
             {
-                logger.LogWarning(
-                    "Prescription {PrescriptionId} cannot be updated because it has dispensing history.",
-                    prescription.Id);
-
+                logger.LogWarning("Prescription {PrescriptionId} cannot be updated because it has dispensing history.", prescription.Id);
                 return PrescriptionErrors.CannotUpdateDispensed;
             }
 
-            // 5. Load all requested medicines in one query
-            var medicineIds = request.Items
-                .Select(item => item.MedicineId)
-                .ToList();
+            // 5. Load requested medicines (AsNoTracking for performance)
+            var medicineIds = request.Items.Select(item => item.MedicineId).ToList();
+            var medicines = await medicineRepository.Query()
+                .Where(m => medicineIds.Contains(m.Id))
+                .ToListAsync(cancellationToken);
 
-            var medicines = await medicineRepository.GetByIdsAsync(
-                medicineIds,
-                cancellationToken);
-
-            // 6. Ensure all requested medicines exist and are not archived
+            // 6. Check if all medicines exist
             if (medicines.Count != medicineIds.Count)
             {
-                var foundMedicineIds = medicines
-                    .Select(medicine => medicine.Id)
-                    .ToHashSet();
+                var foundMedicineIds = medicines.Select(medicine => medicine.Id).ToHashSet();
+                var missingMedicineId = medicineIds.First(id => !foundMedicineIds.Contains(id));
 
-                var missingMedicineId = medicineIds
-                    .First(id => !foundMedicineIds.Contains(id));
-
-                logger.LogWarning(
-                    "Medicine with ID {MedicineId} was not found while updating prescription {PrescriptionId}.",
-                    missingMedicineId,
-                    prescription.Id);
-
+                logger.LogWarning("Medicine with ID {MedicineId} was not found.", missingMedicineId);
                 return MedicineErrors.NotFound(missingMedicineId);
             }
 
-            // 7. Ensure all requested medicines are active
-            var inactiveMedicine = medicines
-                .FirstOrDefault(medicine => !medicine.IsActive);
-
+            // 7. Check if medicines are active
+            var inactiveMedicine = medicines.FirstOrDefault(medicine => !medicine.IsActive);
             if (inactiveMedicine is not null)
             {
-                logger.LogWarning(
-                    "Inactive medicine {MedicineId} cannot be added to prescription {PrescriptionId}.",
-                    inactiveMedicine.Id,
-                    prescription.Id);
-
+                logger.LogWarning("Inactive medicine {MedicineId} cannot be added.", inactiveMedicine.Id);
                 return MedicineErrors.Inactive(inactiveMedicine.Code);
             }
 
@@ -128,40 +93,24 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.C
             prescription.ValidTo = request.ValidTo;
             prescription.Notes = request.Notes?.Trim();
 
-            // 9. Prepare lookup for requested items
-            var requestedItemsByMedicineId = request.Items
-                .ToDictionary(item => item.MedicineId);
-
-            var existingItemsByMedicineId = prescription.Items
-                .ToDictionary(item => item.MedicineId);
+            // 9. Sync Prep (Dictionaries)
+            var requestedItemsByMedicineId = request.Items.ToDictionary(item => item.MedicineId);
+            var existingItemsByMedicineId = prescription.Items.ToDictionary(item => item.MedicineId);
 
             // 10. Update existing items
             foreach (var existingItem in prescription.Items)
             {
-                if (!requestedItemsByMedicineId.TryGetValue(
-                        existingItem.MedicineId,
-                        out var requestedItem))
-                {
+                if (!requestedItemsByMedicineId.TryGetValue(existingItem.MedicineId, out var requestedItem))
                     continue;
-                }
 
-                existingItem.QuantityPrescribed =
-                    requestedItem.QuantityPrescribed;
-
-                existingItem.MaxFillCount =
-                    requestedItem.MaxFillCount;
-
-                existingItem.DosageInstructions =
-                    requestedItem.DosageInstructions?.Trim();
-
-                // FillUsedCount is intentionally NOT modified.
+                existingItem.QuantityPrescribed = requestedItem.QuantityPrescribed;
+                existingItem.MaxFillCount = requestedItem.MaxFillCount;
+                existingItem.DosageInstructions = requestedItem.DosageInstructions?.Trim();
             }
 
-            // 11. Remove items that are no longer in the request
+            // 11. Remove deleted items
             var itemsToRemove = prescription.Items
-                .Where(existingItem =>
-                    !requestedItemsByMedicineId.ContainsKey(
-                        existingItem.MedicineId))
+                .Where(existingItem => !requestedItemsByMedicineId.ContainsKey(existingItem.MedicineId))
                 .ToList();
 
             foreach (var item in itemsToRemove)
@@ -169,31 +118,25 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.C
                 prescriptionRepository.RemoveItem(item);
             }
 
-            // 12. Add newly requested items
+            // 12. Add new items
             foreach (var requestedItem in request.Items)
             {
-                if (existingItemsByMedicineId.ContainsKey(
-                        requestedItem.MedicineId))
-                {
+                if (existingItemsByMedicineId.ContainsKey(requestedItem.MedicineId))
                     continue;
-                }
 
-                prescription.Items.Add(
-                    new PrescriptionItem
-                    {
-                        MedicineId = requestedItem.MedicineId,
-                        QuantityPrescribed = requestedItem.QuantityPrescribed,
-                        MaxFillCount = requestedItem.MaxFillCount,
-                        FillUsedCount = 0,
-                        DosageInstructions =
-                            requestedItem.DosageInstructions?.Trim()
-                    });
+                prescription.Items.Add(new PrescriptionItem
+                {
+                    MedicineId = requestedItem.MedicineId,
+                    QuantityPrescribed = requestedItem.QuantityPrescribed,
+                    MaxFillCount = requestedItem.MaxFillCount,
+                    FillUsedCount = 0, // DTO does not map this, which is correct
+                    DosageInstructions = requestedItem.DosageInstructions?.Trim()
+                });
             }
 
-            // 13. Persist everything in one transaction/unit of work
+            // 13. Save
             await unitOfWork.SaveChangesAsync(cancellationToken);
-
-            return Result.Updated ;
+            return Result.Updated;
         }
     }
 }

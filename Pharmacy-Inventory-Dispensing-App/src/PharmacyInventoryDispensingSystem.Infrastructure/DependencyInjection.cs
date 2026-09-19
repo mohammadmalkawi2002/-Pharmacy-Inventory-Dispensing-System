@@ -42,8 +42,6 @@ public static class DependencyInjection
 
         });
 
-        
-
 
         //Register Identity:
         services.AddIdentity<ApplicationUser, IdentityRole>(options => 
@@ -171,6 +169,7 @@ public static class DependencyInjection
 
         //Register Repositries and services:
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IStaffUserService, StaffUserService>();
         services.AddScoped<IJwtTokenProvider, JwtTokenProvider>();
