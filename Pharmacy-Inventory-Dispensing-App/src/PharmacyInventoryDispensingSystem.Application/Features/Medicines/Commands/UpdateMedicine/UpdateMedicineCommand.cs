@@ -1,4 +1,5 @@
 using MediatR;
+using PharmacyInventoryDispensingSystem.Application.Common.Files;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
 using System;
@@ -14,6 +15,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
         StockUnit StockUnit,
         PackageUnit PackageUnit,
         int UnitsPerPackage,
-        int ReorderLevel)
+        int ReorderLevel,
+       UploadedFile? Image)
         : IRequest<Result<Updated>>;
 }

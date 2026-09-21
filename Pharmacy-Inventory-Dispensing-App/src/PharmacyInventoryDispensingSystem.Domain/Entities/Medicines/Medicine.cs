@@ -1,5 +1,6 @@
 using PharmacyInventoryDispensingSystem.Domain.Common;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
+using PharmacyInventoryDispensingSystem.Domain.Entities.FileSystem;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
@@ -60,6 +61,9 @@ public sealed class Medicine : SoftDeletableEntity
     public ICollection<PrescriptionItem> PrescriptionItems { get; set; }
         = new List<PrescriptionItem>();
 
+    //Optinal add Img: 
+    public Guid? ImageId { get; set; }
+    public FileImage? Image { get; set; }
 
     public Result<Success> IncreaseStock(int quantity) 
     {

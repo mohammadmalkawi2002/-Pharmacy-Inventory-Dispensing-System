@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Dispenses;
+using PharmacyInventoryDispensingSystem.Domain.Entities.FileSystem;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Identity;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Medicines;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Patients;
@@ -27,6 +28,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
 
     public DbSet<DispenseItem> DispenseItems => Set<DispenseItem>();
     public DbSet<RefreshToken> RefreshTokens=> Set<RefreshToken>();
+    public DbSet<FileImage> FileImages => Set<FileImage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

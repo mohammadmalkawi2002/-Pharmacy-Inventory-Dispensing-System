@@ -2,8 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { MedicineService } from '../../services/medicine.service';
-import { CreateMedicineDto } from '../../models/medicine.models';
-import { MedicineFormComponent } from '../../components/medicine-form/medicine-form.component';
+import { MedicineFormComponent, MedicineFormSaveEvent } from '../../components/medicine-form/medicine-form.component';
 
 @Component({
   selector: 'app-medicine-create',
@@ -18,9 +17,9 @@ export class MedicineCreate {
 
   isSubmitting = signal(false);
 
-  onSave(dto: CreateMedicineDto): void {
+  onSave(event: MedicineFormSaveEvent): void {
     this.isSubmitting.set(true);
-    this.#medicineService.createMedicine(dto).subscribe({
+    this.#medicineService.createMedicine(event.dto, event.image).subscribe({
       next: () => {
         this.isSubmitting.set(false);
         this.#messageService.add({ severity: 'success', summary: 'Medicine Added', detail: 'New medicine added to catalog successfully.', life: 3000 });

@@ -30,6 +30,28 @@
       </div>
 
       <div class="space-y-8">
+
+        <!-- Image Display (if hasImage is true) -->
+        @if (medicine()!.hasImage) {
+          <div class="flex justify-center p-6 bg-surface-50 rounded-2xl border border-surface-200 shadow-sm relative min-h-48 overflow-hidden">
+            @if (isImageLoading()) {
+              <div class="absolute inset-0 flex flex-col items-center justify-center text-surface-400 bg-surface-50/80 backdrop-blur-sm z-10">
+                <i class="pi pi-spin pi-spinner text-3xl mb-2 text-primary"></i>
+                <p class="text-sm font-medium">Loading image...</p>
+              </div>
+            }
+            @if (imageUrl()) {
+              <img [src]="imageUrl()!" alt="Medicine image" class="max-w-full max-h-80 object-contain rounded-xl shadow-sm border border-surface-200" />
+            } @else if (!isImageLoading()) {
+              <!-- Fallback if it failed to load for some reason -->
+              <div class="flex flex-col items-center justify-center text-surface-400">
+                <i class="pi pi-image text-4xl mb-2"></i>
+                <p class="text-sm">Image preview unavailable</p>
+              </div>
+            }
+          </div>
+        }
+
         <!-- Status Banner -->
         <div class="flex items-center justify-between p-6 bg-gradient-to-br from-surface-50 to-surface-100/50 rounded-2xl border border-surface-200 shadow-sm">
           <div>

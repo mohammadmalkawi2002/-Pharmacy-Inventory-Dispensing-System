@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PharmacyInventoryDispensingSystem.Application.Common.Files;
 using PharmacyInventoryDispensingSystem.Application.Common.Models;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.ActivateMedicine;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.ArchiveMedicine;
@@ -16,6 +17,7 @@ using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.G
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetLowStockMedicines;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicineByCode;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicineById;
+using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicineImage;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.GetMedicines;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Queries.LookupMedicines;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization;
@@ -32,7 +34,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
     [ApiVersion("1.0")]
     [Tags("Medicines")]
     [Authorize]
-    [Produces("application/json")]
+    //[Produces("application/json")]
     [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status500InternalServerError)]
@@ -168,6 +170,28 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
 
 
+        [HttpGet("{id:guid}/image")]
+        [Authorize(Policy = Permissions.Medicines.Read)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status404NotFound)]
+        [EndpointSummary("Gets a medicine image")]
+        [EndpointDescription("Returns the image of the specified medicine if available.")]
+        [EndpointName("GetMedicineImageV1")]
+        [MapToApiVersion("1.0")]
+        public async Task<IActionResult> GetMedicineImage(
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            var query = new GetMedicineImageQuery(id);
+
+            var result = await sender.Send(query, cancellationToken);
+
+            return result.Match<IActionResult>(
+               response => File(response.Content, response.ContentType),
+               Problem);
+            
+        }
+
         [HttpGet("lookup")]
         [Authorize(Policy = Permissions.Medicines.Read)]
         [EndpointSummary("Search medicines for selection")]
@@ -199,7 +223,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPost]
         [Authorize(Policy = Permissions.Medicines.Create)]
-        [Consumes("application/json")]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType<MedicineDetailsResponseDto>(StatusCodes.Status201Created)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status400BadRequest)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status409Conflict)]
@@ -208,9 +232,17 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         [EndpointName("CreateMedicineV1")]
         [MapToApiVersion("1.0")]
         public async Task<IActionResult> CreateMedicine(
-            [FromBody] CreateMedicineRequest request,
+            [FromForm] CreateMedicineRequest request,
             CancellationToken cancellationToken)
         {
+            var imageFile = request.Image is not null
+                ? new UploadedFile(
+                    request.Image.OpenReadStream(),
+                    request.Image.FileName,
+                    request.Image.ContentType,
+                    request.Image.Length)
+                : null;
+
             var command = new CreateMedicineCommand(
                 request.Code,
                 request.Name,
@@ -219,7 +251,8 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
                 request.StockUnit,
                 request.PackageUnit,
                 request.UnitsPerPackage,
-                request.ReorderLevel);
+                request.ReorderLevel,
+                imageFile);
 
             var result = await sender.Send(command, cancellationToken);
 
@@ -276,7 +309,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
 
         [HttpPut("{id:guid}")]
         [Authorize(Policy = Permissions.Medicines.Update)]
-        [Consumes("application/json")]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status400BadRequest)]
         [ProducesResponseType<ApiErrorResponse>(StatusCodes.Status404NotFound)]
@@ -288,9 +321,17 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         [MapToApiVersion("1.0")]
         public async Task<ActionResult> UpdateMedicine(
             Guid id,
-            [FromBody] UpdateMedicineRequest request,
+            [FromForm] UpdateMedicineRequest request,
             CancellationToken cancellationToken)
         {
+            var imageFile = request.Image is not null
+                ? new UploadedFile(
+                    request.Image.OpenReadStream(),
+                    request.Image.FileName,
+                    request.Image.ContentType,
+                    request.Image.Length)
+                : null;
+
             var command = new UpdateMedicineCommand(
                 id,
                 request.Code,
@@ -300,7 +341,8 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
                 request.StockUnit,
                 request.PackageUnit,
                 request.UnitsPerPackage,
-                request.ReorderLevel);
+                request.ReorderLevel,
+                imageFile);
 
             var result = await sender.Send(command, cancellationToken);
 
@@ -398,3 +440,5 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         }
     }
 }
+
+

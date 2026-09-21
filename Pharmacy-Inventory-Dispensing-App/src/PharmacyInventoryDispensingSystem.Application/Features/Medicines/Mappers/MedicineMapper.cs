@@ -52,7 +52,8 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Mappe
                 CreatedAtUtc: entity.CreatedAtUtc,
                 CreatedBy: entity.CreatedBy,
                 UpdatedAtUtc: entity.UpdatedAtUtc,
-                UpdatedBy: entity.UpdatedBy);
+                UpdatedBy: entity.UpdatedBy,
+                HasImage: entity.ImageId.HasValue);
         }
 
         public static List<MedicineResponseDto> ToDtos(this IEnumerable<Medicine> entities)

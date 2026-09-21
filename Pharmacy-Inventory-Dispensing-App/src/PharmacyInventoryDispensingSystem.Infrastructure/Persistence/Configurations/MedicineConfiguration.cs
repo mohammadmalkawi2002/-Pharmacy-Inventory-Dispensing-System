@@ -72,16 +72,16 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
                 .HasDefaultValue(true);
 
 
-            
-
-
-
             builder.HasMany(m => m.PrescriptionItems)
                 .WithOne(pi => pi.Medicine)
                 .HasForeignKey(pi => pi.MedicineId)
                 .OnDelete(DeleteBehavior.Restrict);
-                            
 
+            //Add FileImage Relationship:
+            builder.HasOne(m => m.Image)
+                .WithOne()
+                .HasForeignKey<Medicine>(m => m.ImageId)
+                .OnDelete(DeleteBehavior.Restrict);
                 
 
             //  Indexes:

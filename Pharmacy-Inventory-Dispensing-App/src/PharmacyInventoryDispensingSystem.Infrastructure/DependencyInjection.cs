@@ -20,6 +20,7 @@ using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Interceptors;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositories;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Seed;
 using PharmacyInventoryDispensingSystem.Infrastructure.Services.Email;
+using PharmacyInventoryDispensingSystem.Infrastructure.Services.FileImageManager;
 using System.Text;
 
 namespace PharmacyInventoryDispensingSystem.Infrastructure;
@@ -179,6 +180,12 @@ public static class DependencyInjection
         services.AddScoped<IPrescriptionRepository, PrescriptionRepository>();
         services.AddScoped<IDispenseRepository, DispenseRepository>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
+
+        //RegisterFileImageManager:
+        services.Configure<FileImageSettings>(configuration.GetSection("FileImageManager"));
+        services.AddScoped<IFileImageService, FileImageService>();
+
+
         // Register Interceptor:
         services.AddScoped<ISaveChangesInterceptor,AuditableEntityInterceptor>();
         services.AddScoped<
@@ -186,7 +193,6 @@ public static class DependencyInjection
     PrescriptionAuthorizationService>();
 
         // Current User & Resource Authorization:
-
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<IAuthorizationHandler, 

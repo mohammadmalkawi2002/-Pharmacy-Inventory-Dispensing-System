@@ -19,7 +19,9 @@ public interface IGenericRepository<TEntity> where TEntity : Entity
     /// </summary>
     void Delete(TEntity entity);
 
-   
+    void HardDelete(TEntity entity);
+
+
     Task<TEntity?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default);

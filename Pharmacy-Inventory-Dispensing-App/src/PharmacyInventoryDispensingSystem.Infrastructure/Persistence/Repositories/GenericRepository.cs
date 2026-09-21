@@ -68,4 +68,8 @@ public class GenericRepository<TEntity>(AppDbContext context)
         return query;
     }
 
+    public void HardDelete(TEntity entity)
+    {
+        context.Set<TEntity>().Remove(entity);
+    }
 }
