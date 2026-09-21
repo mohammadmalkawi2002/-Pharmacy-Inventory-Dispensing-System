@@ -10,20 +10,26 @@
       </div>
     </div>
 
-    @if (medicine()) {
-      <app-medicine-form 
-        [medicine]="medicine()"
-        [isSubmitting]="isSubmitting()"
-        (save)="onSave($event)"
-        (cancel)="onCancel()" />
-    } @else {
+    @if (isLoading()) {
+      <div class="py-12 flex flex-col items-center justify-center text-surface-500">
+        <i class="pi pi-spin pi-spinner text-4xl mb-4 text-primary"></i>
+        <p>Loading medicine details...</p>
+      </div>
+    } @else if (loadError()) {
       <div class="py-12">
         <app-empty-state 
           title="Data Unavailable"
-          description="Direct access or refresh is currently unsupported for editing until the API is fully verified."
+          description="The medicine could not be found or failed to load. Please check your connection and try again."
           actionLabel="Return to Catalog"
           (action)="onCancel()" />
       </div>
+    } @else if (medicine()) {
+      <app-medicine-form 
+        [medicine]="medicine()"
+        [isSubmitting]="isSubmitting()"
+        [hasImage]="medicine()!.hasImage ?? false"
+        (save)="onSave($event)"
+        (cancel)="onCancel()" />
     }
   </div>
 </div>

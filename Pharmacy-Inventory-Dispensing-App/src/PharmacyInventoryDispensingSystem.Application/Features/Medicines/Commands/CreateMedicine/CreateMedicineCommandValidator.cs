@@ -35,9 +35,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
                 .IsInEnum()
                 .WithMessage("The provided medicine form is invalid.");
 
-            RuleFor(command => command.Form)
-              .IsInEnum()
-              .WithMessage("The provided medicine form is invalid.");
 
             RuleFor(command => command.StockUnit)
                 .IsInEnum()

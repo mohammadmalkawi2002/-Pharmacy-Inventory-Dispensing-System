@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
 
 namespace PharmacyInventoryDispensingSystem.WebApi.Contracts.Requests.Medicine
@@ -10,6 +11,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Contracts.Requests.Medicine
         StockUnit StockUnit,
         PackageUnit PackageUnit,
         int UnitsPerPackage,
-        int ReorderLevel);
+        int ReorderLevel,
+        IFormFile? Image);
 }
 

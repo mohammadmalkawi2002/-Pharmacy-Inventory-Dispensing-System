@@ -8,6 +8,7 @@ The system supports:
 
 - Patient management
 - Medicine catalog management
+- Medicine image upload, replacement, and display with file type/size validation
 - Simple medicine stock quantities and low-stock warnings
 - Prescription creation by doctors
 - Prescription items with independent fill rules
@@ -65,7 +66,7 @@ Partial dispensing is supported by selecting only eligible prescription items. T
 ## Tech Stack
 
 | Area | Technology | Version |
-|---|---|---:|
+| --- | --- | ---: |
 | Backend | .NET SDK / ASP.NET Core | 10.0.400 / 10 |
 | Data access | Entity Framework Core | 10.0.11 |
 | Database | SQL Server Express | 2022 — 16.0.1000.6 RTM |
@@ -194,7 +195,7 @@ Update `src/environments/environment.ts` for a deployed API.
 These accounts are created by the development database seeder:
 
 | Role | Email | Password |
-|---|---|---|
+| --- | --- | --- |
 | Admin | `mohammadmalkawi681@gmail.com` | `Admin@123!` |
 | Doctor | `doctor@pharmacy.local` | `User#12345!` |
 | Pharmacist | `pharmacist@pharmacy.local` | `User#12345!` |
@@ -232,7 +233,8 @@ Pharmacy-Inventory-Dispensing-System/
 
 - **Domain:** entities, enums, domain rules, and domain errors; no dependency on other layers.
 - **Application:** CQRS commands/queries, handlers, DTOs, validation, mappings, and interfaces; depends on Domain.
-- **Infrastructure:** EF Core, SQL Server repositories, Identity, migrations, email, seeding, and background services; implements Application interfaces.
+- **Infrastructure:** EF Core, SQL Server repositories, Identity, migrations, email, file storage, seeding, and background services; implements Application interfaces.
+
 - **WebApi:** controllers, middleware, API versioning, OpenAPI/Scalar, and dependency registration.
 - **Client/angular-app:** Angular standalone SPA, feature pages, authentication state, guards, interceptors, and permission-aware UI.
 
@@ -248,7 +250,6 @@ Pharmacy-Inventory-Dispensing-System/
 - Docker and Docker Compose so the API, SQL Server, and Angular application can run with one command.
 - SignalR real-time notifications.
 - Redis caching or output caching for read endpoints.
-- File upload with file type/size validation and a storage abstraction.
 - Excel and PDF export.
 - Localization for English and Arabic, including RTL support.
 

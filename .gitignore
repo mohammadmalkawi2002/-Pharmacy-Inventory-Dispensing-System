@@ -10,7 +10,8 @@ obj/
 *.user
 *.suo
 
-
+# Runtime uploaded images
+Pharmacy-Inventory-Dispensing-App/src/PharmacyInventoryDispensingSystem.WebApi/wwwroot/app_data/images/
 # =========================
 # Angular / Node
 # =========================

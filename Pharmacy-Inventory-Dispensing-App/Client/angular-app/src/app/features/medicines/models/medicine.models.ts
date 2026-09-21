@@ -15,8 +15,11 @@ export interface Medicine {
   stockStatus: string;
   isActive: boolean;
   createdAtUtc?: string;
+  createdBy?: string;
   updatedAtUtc?: string;
   updatedBy?: string;
+  /** Present on MedicineDetailsResponseDto. Absent on list responses. */
+  hasImage?: boolean;
 }
 
 

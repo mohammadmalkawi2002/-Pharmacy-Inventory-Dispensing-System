@@ -20,5 +20,6 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Dtos
      DateTimeOffset CreatedAtUtc,
      string? CreatedBy,
      DateTimeOffset? UpdatedAtUtc,
-     string? UpdatedBy);
+     string? UpdatedBy,
+     bool HasImage);
 }

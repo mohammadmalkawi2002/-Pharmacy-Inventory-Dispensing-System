@@ -44,12 +44,41 @@ export class MedicineService {
     return this.#http.get<Medicine>(`${this.#baseUrl}/${id}`);
   }
 
-  createMedicine(dto: CreateMedicineDto): Observable<Medicine> {
-    return this.#http.post<Medicine>(this.#baseUrl, dto);
+  createMedicine(dto: CreateMedicineDto, image?: File | null): Observable<Medicine> {
+    const formData = new FormData();
+    formData.append('Code', dto.code);
+    formData.append('Name', dto.name);
+    formData.append('Strength', dto.strength);
+    formData.append('Form', dto.form);
+    formData.append('StockUnit', dto.stockUnit);
+    formData.append('PackageUnit', dto.packageUnit);
+    formData.append('UnitsPerPackage', dto.unitsPerPackage.toString());
+    formData.append('ReorderLevel', dto.reorderLevel.toString());
+    if (image) {
+      formData.append('Image', image);
+    }
+    return this.#http.post<Medicine>(this.#baseUrl, formData);
   }
 
-  updateMedicine(id: string, dto: UpdateMedicineDto): Observable<Medicine> {
-    return this.#http.put<Medicine>(`${this.#baseUrl}/${id}`, dto);
+  updateMedicine(id: string, dto: UpdateMedicineDto, image?: File | null): Observable<void> {
+    const formData = new FormData();
+    formData.append('Code', dto.code);
+    formData.append('Name', dto.name);
+    formData.append('Strength', dto.strength);
+    formData.append('Form', dto.form);
+    formData.append('StockUnit', dto.stockUnit);
+    formData.append('PackageUnit', dto.packageUnit);
+    formData.append('UnitsPerPackage', dto.unitsPerPackage.toString());
+    formData.append('ReorderLevel', dto.reorderLevel.toString());
+    if (image) {
+      formData.append('Image', image);
+    }
+    // No Image field appended means "keep existing image" on the backend.
+    return this.#http.put<void>(`${this.#baseUrl}/${id}`, formData);
+  }
+
+  getMedicineImage(id: string): Observable<Blob> {
+    return this.#http.get(`${this.#baseUrl}/${id}/image`, { responseType: 'blob' });
   }
 
   receiveStock(id: string, dto: ReceiveStockDto): Observable<ReceiveStockResponse> {

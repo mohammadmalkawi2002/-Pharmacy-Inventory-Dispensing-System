@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Medicine, getStockSeverity } from '../../models/medicine.models';
 import { MedicineService } from '../../services/medicine.service';
@@ -14,7 +14,7 @@ import { LoadingComponent } from '../../../../shared/components/loading/loading.
   imports: [TagModule, ButtonModule, DatePipe, EmptyStateComponent, LoadingComponent],
   templateUrl: './medicine-details.component.html'
 })
-export class MedicineDetailsComponent implements OnInit {
+export class MedicineDetailsComponent implements OnInit, OnDestroy {
   readonly #medicineService = inject(MedicineService);
   readonly #router = inject(Router);
   readonly #route = inject(ActivatedRoute);
@@ -22,6 +22,9 @@ export class MedicineDetailsComponent implements OnInit {
   medicine = signal<Medicine | null>(null);
   isLoading = signal(true);
   error = signal<string | null>(null);
+
+  imageUrl = signal<string | null>(null);
+  isImageLoading = signal(false);
 
   ngOnInit(): void {
     const id = this.#route.snapshot.paramMap.get('id');
@@ -46,6 +49,9 @@ export class MedicineDetailsComponent implements OnInit {
       next: (data) => {
         this.medicine.set(data);
         this.isLoading.set(false);
+        if (data.hasImage) {
+          this.#fetchImage(id);
+        }
       },
       error: () => {
         this.error.set('Failed to load medicine details. It might have been deleted or you lack permissions.');
@@ -54,11 +60,38 @@ export class MedicineDetailsComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.#revokeImageUrl();
+  }
+
   getStockSeverity(status: string) {
     return getStockSeverity(status);
   }
 
   onBack(): void {
     this.#router.navigate(['/medicines']);
+  }
+
+  #fetchImage(id: string): void {
+    this.isImageLoading.set(true);
+    this.#medicineService.getMedicineImage(id).subscribe({
+      next: (blob) => {
+        this.#revokeImageUrl(); // just in case
+        this.imageUrl.set(URL.createObjectURL(blob));
+        this.isImageLoading.set(false);
+      },
+      error: () => {
+        // Failing to load the image shouldn't break the whole page
+        this.isImageLoading.set(false);
+      }
+    });
+  }
+
+  #revokeImageUrl(): void {
+    const url = this.imageUrl();
+    if (url) {
+      URL.revokeObjectURL(url);
+      this.imageUrl.set(null);
+    }
   }
 }

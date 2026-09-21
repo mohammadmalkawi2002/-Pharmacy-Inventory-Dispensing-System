@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
 using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Dtos;
 using PharmacyInventoryDispensingSystem.Application.Features.Medicines.Mappers;
@@ -12,7 +13,8 @@ using System.Threading.Tasks;
 namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Commands.CreateMedicine
 {
     public sealed class CreateMedicineCommandHandler(
-         IMedicineRepository medicineRepository,
+        IMedicineRepository medicineRepository,
+        IFileImageService fileImageService,
         IUnitOfWork unitOfWork,
         ILogger<CreateMedicineCommandHandler> logger)
         : IRequestHandler<CreateMedicineCommand, Result<MedicineDetailsResponseDto>>
@@ -42,9 +44,18 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Medicines.Comma
                 UnitsPerPackage = request.UnitsPerPackage,
                 ReorderLevel = request.ReorderLevel,
                 IsActive = true
-
-
             };
+
+            if (request.Image is not null)
+            {
+                var uploadResult = await fileImageService.UploadAsync(request.Image, cancellationToken);
+                if (uploadResult.IsError)
+                {
+                    return uploadResult.Errors;
+                }
+
+                medicine.ImageId = uploadResult.Value.Id;
+            }
 
             medicineRepository.Add(medicine);
             await unitOfWork.SaveChangesAsync(cancellationToken);
