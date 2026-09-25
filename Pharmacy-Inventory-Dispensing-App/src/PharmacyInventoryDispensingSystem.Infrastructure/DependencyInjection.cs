@@ -21,6 +21,7 @@ using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Repositories;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Seed;
 using PharmacyInventoryDispensingSystem.Infrastructure.Services.Email;
 using PharmacyInventoryDispensingSystem.Infrastructure.Services.FileImageManager;
+using PharmacyInventoryDispensingSystem.Infrastructure.Services.PdfManager;
 using System.Text;
 
 namespace PharmacyInventoryDispensingSystem.Infrastructure;
@@ -180,6 +181,9 @@ public static class DependencyInjection
         services.AddScoped<IPrescriptionRepository, PrescriptionRepository>();
         services.AddScoped<IDispenseRepository, DispenseRepository>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
+
+        //Register prescriptionPdf service:
+        services.AddScoped<IPrescriptionPdfService, PrescriptionPdfService>();
 
         //RegisterFileImageManager:
         services.Configure<FileImageSettings>(configuration.GetSection("FileImageManager"));

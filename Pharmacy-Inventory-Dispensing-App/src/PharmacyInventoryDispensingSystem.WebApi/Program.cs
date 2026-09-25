@@ -1,19 +1,17 @@
-using Microsoft.EntityFrameworkCore;
 using PharmacyInventoryDispensingSystem.Application;
-using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
-using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
 using PharmacyInventoryDispensingSystem.Infrastructure;
-using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;
 using PharmacyInventoryDispensingSystem.WebApi;
 using Scalar.AspNetCore;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+//QuestPDF License:
+QuestPDF.Settings.License = LicenseType.Community;
 
-
- builder.Services
+builder.Services
     .AddPresentation(builder.Configuration)
     .AddApplicationServices()
     .AddInfrastructureServices(builder.Configuration);
@@ -46,6 +44,7 @@ else
 }
 
 app.UseRouting();
+
 //Custom for the order of Midllewares:
 app.UseCoreMiddlewares(builder.Configuration);
 

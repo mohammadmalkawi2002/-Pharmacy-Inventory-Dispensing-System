@@ -142,6 +142,35 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.M
         }
 
 
+        public static PrescriptionPdfDto ToPdfDto(
+            this Prescription prescription,
+            string doctorName)
+        {
+            return new PrescriptionPdfDto(
+                 prescription.PrescriptionNumber,
+                 prescription.Patient.DocumentId,
+                 prescription.Patient.FullName,
+                 prescription.Patient.Age,
+                 doctorName,
+                 prescription.ValidFrom,
+                 prescription.ValidTo,
+                 prescription.Status,
+                 prescription.Notes,
+                 prescription.CreatedAtUtc,
+                 prescription.Items
+                     .Select(item => new PrescriptionPdfItemDto(
+                         item.Medicine.Code,
+                         item.Medicine.Name,
+              item.Medicine.Strength,
+              item.Medicine.Form,
+              item.Medicine.StockUnit,
+              item.QuantityPrescribed,
+              item.MaxFillCount,
+              item.DosageInstructions))
+          .ToList());
+
+        }
+
         //Prescription-level helper(status reason for entire prescription )
         private static string? GetPrescriptionUnavailableReason(Prescription prescription, DateOnly today)
         {
