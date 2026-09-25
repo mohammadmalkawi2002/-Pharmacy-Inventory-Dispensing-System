@@ -33,6 +33,10 @@ export class PrescriptionService {
     return this.#http.post<void>(`${this.#baseUrl}/${id}/cancel`, null);
   }
 
+  exportPrescriptionPdf(id: string): Observable<Blob> {
+    return this.#http.get(`${this.#baseUrl}/${id}/pdf`, { responseType: 'blob' });
+  }
+
   lookupPrescription(prescriptionNumber: string, patientDocumentId: string): Observable<Prescription> {
     const params = new HttpParams()
       .set('prescriptionNumber', prescriptionNumber)

@@ -1,13 +1,13 @@
 ﻿using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PharmacyInventoryDispensingSystem.Application.Common.Models;
 using PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Commands.CancelPrescription;
 using PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Commands.CreatePrescription;
 using PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Commands.UpdatePrescription;
 using PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Dtos;
+using PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Queries.ExportPrescriptionPdf;
 using PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Queries.GetPrescriptionById;
 using PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Queries.GetPrescriptions;
 using PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Queries.LookupPrescription;
@@ -80,6 +80,37 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
                 response => Ok(response),
                 Problem);
         }
+
+        [HttpGet("{prescriptionId:guid}/pdf", Name = "ExportPrescriptionPdf")]
+        [Authorize(Policy = Permissions.Prescriptions.Read)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType<ApiErrorResponse>(
+         StatusCodes.Status403Forbidden)]
+        [ProducesResponseType<ApiErrorResponse>(
+         StatusCodes.Status404NotFound)]
+        [EndpointName("ExportPrescriptionPdfV1")]
+        [EndpointSummary("Exports a prescription as PDF")]
+        [MapToApiVersion("1.0")]
+        [EndpointDescription(
+         "Generates and downloads a PDF document for the specified prescription.")]
+        public async Task<ActionResult> ExportPdf(
+         Guid prescriptionId,
+         CancellationToken cancellationToken)
+        {
+            var query = new ExportPrescriptionPdfQuery(prescriptionId);
+
+            var result = await sender.Send(
+                query,
+                cancellationToken);
+
+            return result.Match(
+                response => File(
+                    response.FileBytes,
+                    response.ContentType,
+                    response.FileName),
+                Problem);
+        }
+
 
 
         [HttpGet("lookup")]

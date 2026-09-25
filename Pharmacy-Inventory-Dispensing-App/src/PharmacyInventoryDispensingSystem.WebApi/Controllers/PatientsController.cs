@@ -14,6 +14,7 @@ using PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.Ge
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.GetPatientById;
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.GetPatients;
 using PharmacyInventoryDispensingSystem.Application.Features.Patients.Queries.LookupPatients;
+using PharmacyInventoryDispensingSystem.Application.Features.Prescriptions.Queries.ExportPrescriptionPdf;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization;
 using PharmacyInventoryDispensingSystem.Domain.Entities.Patients;
 using PharmacyInventoryDispensingSystem.WebApi.Contracts.ApiResponse;
@@ -160,9 +161,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
         }
 
 
-
-
-
+       
 
         [HttpPost]
         [Authorize(Policy = PolicyNames.ReceptionistOrAdmin)]

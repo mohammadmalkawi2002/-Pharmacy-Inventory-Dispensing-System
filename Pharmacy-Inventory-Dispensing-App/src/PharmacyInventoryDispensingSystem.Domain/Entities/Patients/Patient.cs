@@ -21,6 +21,27 @@ namespace PharmacyInventoryDispensingSystem.Domain.Entities.Patients
 
         public string PhoneNumber { get; set; } = string.Empty;
 
+
+        //Computed prop Not Mapped to EF:
+
+
+        public int Age
+        {
+            get 
+            {
+                DateTime todayDate = DateTime.UtcNow.Date;
+
+                int age = todayDate.Year - DateOfBirth.Year;
+
+                if (DateOfBirth.Date > todayDate.AddYears(-age))
+                {
+
+                    age--;
+                }
+
+                return age;
+            }
+        }
         public ICollection<Prescription> Prescriptions { get; set; }
             = new List<Prescription>();
     }

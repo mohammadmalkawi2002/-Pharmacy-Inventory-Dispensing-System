@@ -34,6 +34,9 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Configura
                 .IsRequired()
                 .HasMaxLength(16);
 
+            //Not Mapped To EF:
+            builder.Ignore(patient => patient.Age);
+
             builder.HasMany(p => p.Prescriptions)
                 .WithOne(p => p.Patient)
                 .HasForeignKey(p => p.PatientId)

@@ -20,7 +20,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Mapper
                 DocumentType:GetDocumentType(entity.DocumentId),
                 FullName:entity.FullName,
                 DateOfBirth:entity.DateOfBirth,
-                Age:CalculateAge(entity.DateOfBirth),
+                Age:entity.Age,
                 PhoneNumber:entity.PhoneNumber,
                 CreatedAtUtc:entity.CreatedAtUtc);
 
@@ -53,20 +53,7 @@ namespace PharmacyInventoryDispensingSystem.Application.Features.Patients.Mapper
             
         }
 
-        private static int CalculateAge(DateTime dateOfBirth) 
-        {
-            DateTime todayDate = DateTime.UtcNow.Date;
-
-            int age = todayDate.Year - dateOfBirth.Year;
-
-            if (dateOfBirth.Date > todayDate.AddYears(-age)) 
-            {
-
-                age--;
-            }        
-
-            return age;
-        }
+      
 
     }
 }

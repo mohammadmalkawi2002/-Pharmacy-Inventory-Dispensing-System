@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { PrescriptionService } from '../../services/prescription.service';
 import { Prescription, getPrescriptionStatusSeverity, CreatePrescriptionDto, PrescriptionStatus } from '../../models/prescription.models';
 import { Permissions } from '../../../../core/auth/auth.models';
@@ -48,6 +49,7 @@ export class PrescriptionsListComponent implements OnInit {
   totalRecords = signal(0);
   isLoading = signal(true);
   isSubmitting = signal(false);
+  exportingPdfIds = signal<Set<string>>(new Set());
 
   searchQuery = '';
   status: string | undefined = undefined;
@@ -126,6 +128,33 @@ export class PrescriptionsListComponent implements OnInit {
 
   openViewDialog(prescription: Prescription): void {
     this.#router.navigate(['/prescriptions', prescription.id], { state: { data: prescription } });
+  }
+
+  exportPdf(prescription: Prescription): void {
+    if (this.exportingPdfIds().has(prescription.id)) return;
+
+    this.exportingPdfIds.update(ids => new Set(ids).add(prescription.id));
+
+    this.#prescriptionService.exportPrescriptionPdf(prescription.id)
+      .pipe(
+        finalize(() => {
+          this.exportingPdfIds.update(ids => {
+            const next = new Set(ids);
+            next.delete(prescription.id);
+            return next;
+          });
+        })
+      )
+      .subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.href = url;
+          anchor.download = `Prescription-${prescription.prescriptionNumber}.pdf`;
+          anchor.click();
+          URL.revokeObjectURL(url);
+        }
+      });
   }
 
   confirmCancel(prescription: Prescription): void {

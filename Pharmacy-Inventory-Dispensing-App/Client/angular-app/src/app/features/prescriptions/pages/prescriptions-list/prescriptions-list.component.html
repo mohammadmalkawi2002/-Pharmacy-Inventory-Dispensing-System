@@ -95,7 +95,7 @@
           <th pSortableColumn="validFrom">Valid From <p-sorticon field="validFrom"></p-sorticon></th>
           <th pSortableColumn="validTo">Valid To <p-sorticon field="validTo"></p-sorticon></th>
           <th class="text-center">Status</th>
-          <th class="text-center" style="width: 140px;">Actions</th>
+          <th class="text-center" style="width: 190px;">Actions</th>
         </tr>
       </ng-template>
 
@@ -124,6 +124,17 @@
                 severity="info" 
                 (onClick)="openViewDialog(prescription)" 
                 pTooltip="Review RX Slip" />
+
+              <p-button 
+                icon="pi pi-file-pdf" 
+                label="PDF"
+                [text]="true" 
+                [rounded]="true" 
+                severity="secondary" 
+                (onClick)="exportPdf(prescription)" 
+                pTooltip="Export Prescription PDF"
+                [loading]="exportingPdfIds().has(prescription.id)"
+                [disabled]="exportingPdfIds().has(prescription.id)" />
 
               @if (prescription.status === 'Active') {
                 <p-button 
