@@ -2,20 +2,19 @@ using PharmacyInventoryDispensingSystem.Application;
 using PharmacyInventoryDispensingSystem.Infrastructure;
 using PharmacyInventoryDispensingSystem.WebApi;
 using Scalar.AspNetCore;
-using QuestPDF.Infrastructure;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-//QuestPDF License:
-QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services
     .AddPresentation(builder.Configuration)
     .AddApplicationServices()
     .AddInfrastructureServices(builder.Configuration);
 
+builder.Host.UseSerilog((context, loggerConfig) =>
+loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 var app = builder.Build();
 
@@ -44,15 +43,10 @@ else
 }
 
 app.UseRouting();
-
 //Custom for the order of Midllewares:
 app.UseCoreMiddlewares(builder.Configuration);
-
 app.MapControllers();
-
-
 app.MapStaticAssets();
-
 // Initialize database + seed data
 await app.Services.InitializeInfrastructureAsync();
 

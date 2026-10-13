@@ -4,6 +4,8 @@ using PharmacyInventoryDispensingSystem.WebApi.Contracts.ApiResponse;
 using PharmacyInventoryDispensingSystem.WebApi.Middlewares;
 using PharmacyInventoryDispensingSystem.WebApi.OpenApi.Transformers;
 using PharmacyInventoryDispensingSystem.WebApi.RateLimiting;
+using QuestPDF.Infrastructure;
+using Serilog;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -15,6 +17,10 @@ namespace PharmacyInventoryDispensingSystem.WebApi
 
         public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
         {
+
+            //QuestPDF License:
+            QuestPDF.Settings.License = LicenseType.Community;
+
 
             services
                .AddCustomApiVersioning()
@@ -107,18 +113,17 @@ namespace PharmacyInventoryDispensingSystem.WebApi
                     context.HttpContext.Response.StatusCode =
                         StatusCodes.Status429TooManyRequests;
 
-                    var response = new
+
+                    var errors = new Dictionary<string, string[]>
                     {
-                        success = false,
-                        message,
-                        errors = new Dictionary<string, string[]>
-                        {
-                            ["RateLimit.Exceeded"] = [message]
-                        },
-                        traceId =
-                            context.HttpContext.TraceIdentifier
+                        ["RateLimit.Exceeded"] = [message]
                     };
 
+                    var response = new ApiErrorResponse(
+                        Success:false,
+                        Message:message,
+                        Errors:errors,
+                        CorrelationId:context.HttpContext.TraceIdentifier);
                     await context.HttpContext.Response.WriteAsJsonAsync(
                         response,
                         cancellationToken);
@@ -232,10 +237,12 @@ namespace PharmacyInventoryDispensingSystem.WebApi
 
         public static IApplicationBuilder UseCoreMiddlewares(this IApplicationBuilder app, IConfiguration configuration)
         {
+            // Add CorrelationId to request logs
+            app.UseMiddleware<RequestLogContextMiddleware>();
             // 1. Exception handling should be FIRST to catch all errors
             app.UseExceptionHandler();
 
-            // 2. Status code pages for handling HTTP status codes
+            // 2. Status code pages for handling HTTP status codes(Handle empty error responses)
             app.UseStatusCodePages(async statusCodeContext =>
             {
                 var httpContext = statusCodeContext.HttpContext;
@@ -283,7 +290,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi
                     Success: false,
                     Message: message,
                     Errors: errors,
-                    TraceId: httpContext.TraceIdentifier);
+                    CorrelationId: httpContext.TraceIdentifier);
 
                 await httpContext.Response.WriteAsJsonAsync(
                     response,
@@ -292,7 +299,8 @@ namespace PharmacyInventoryDispensingSystem.WebApi
 
             // 3. HTTPS redirection (before any other middleware that might generate URLs)
             app.UseHttpsRedirection();
-            // 4. Serilog request logging (early to log all requests) later i do not understand it
+            // 4. Serilog request logging (early to log all requests) :register summary  about the request and response, including status codes and execution time
+            app.UseSerilogRequestLogging();
 
             // 5. CORS (before authentication/authorization)
             app.UseCors("AllowFrontend");

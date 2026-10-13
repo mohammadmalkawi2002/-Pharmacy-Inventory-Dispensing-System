@@ -13,13 +13,13 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Middlewares
             logger.LogError(exception, "An unhandled exception occurred.");
 
             httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            var traceId = httpContext.TraceIdentifier;
+            var correlationId = httpContext.TraceIdentifier;
 
             var response = new ApiErrorResponse(
                 Success: false,
                 Message: "An unexpected error occurred.",
                 Errors: null,
-                TraceId: traceId);
+                CorrelationId: correlationId);
 
             await httpContext.Response.WriteAsJsonAsync(response,cancellationToken);
 

@@ -26,12 +26,9 @@ namespace PharmacyInventoryDispensingSystem.Application.Common.Behaviours
             {
                 var requestName = typeof(TRequest).Name;
                 _lgger.LogError(
-                         ex, "Unhandled exception for request {RequestName} {@Request}", 
-                         requestName,
-                         request);
-
+                         ex, "Unhandled exception for request {RequestName} ",
+                         requestName);
                 throw;
-            
             }
         }
     }

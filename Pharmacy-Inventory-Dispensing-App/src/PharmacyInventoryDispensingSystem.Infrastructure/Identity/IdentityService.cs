@@ -5,15 +5,12 @@ using PharmacyInventoryDispensingSystem.Application.Common.Interfaces;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authentication.DTOs;
 using PharmacyInventoryDispensingSystem.Application.Features.SecurityManager.Authorization;
 using PharmacyInventoryDispensingSystem.Domain.Common.Results;
-using PharmacyInventoryDispensingSystem.Domain.Entities.Identity;
 using PharmacyInventoryDispensingSystem.Infrastructure.Identity.Jwt;
 using PharmacyInventoryDispensingSystem.Infrastructure.Identity.RefreshTokens;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;
 using PharmacyInventoryDispensingSystem.Infrastructure.Services.Email;
 using PharmacyInventoryDispensingSystem.Infrastructure.Services.Email.Templates;
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
 {
@@ -145,9 +142,8 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
                  "Login attempt rejected because the supplied credentials are invalid or user {UserId} is inactive",
                  user?.Id);
 
-
                 return Error.Unauthorized(
-                    "Auth.InvalidCredentials",
+                    "Auth.Login.InvalidCredentials",
                     "Invalid email or password.");
             }
 
@@ -170,28 +166,16 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
             //Success?
             if (!signInResult.Succeeded)
             {
+                logger.LogWarning(
+                    "Login attempt failed for user {UserId} due to invalid credentials",
+                    user.Id);
+
                 return Error.Unauthorized(
-                    "Auth.InvalidCredentials",
+                    "Auth.Login.InvalidCredentials",
                     "Invalid email or password.");
             }
 
             user.LastLoginAtUtc = DateTimeOffset.UtcNow;
-
-          var updateResult=  await userManager.UpdateAsync(user);
-
-            if(!updateResult.Succeeded)
-            {
-                logger.LogError(
-                    "Failed to update last login timestamp for user {UserId}. ErrorCount: {ErrorCount}, ErrorCodes: {ErrorCodes}",
-                    user.Id,
-                    updateResult.Errors.Count(),
-                    updateResult.Errors.Select(x => x.Code).ToArray());
-
-                return updateResult.Errors
-                        .Select(error => Error.Failure(error.Code, error.Description))
-                        .ToList();
-            }
-
             var response= await CreateAuthenticationResponseAsync(user, cancellationToken);
 
             logger.LogInformation(
@@ -243,36 +227,31 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
                     "The user account is inactive.");
             }
 
+            //3. Load roles and permissions once
+            var roles = await userManager.GetRolesAsync(user);
+            var permissions = await GetPermissionsAsync(roles);
 
-            // 3. Generate a new access token.
-            var accessTokenResult = await jwtTokenProvider.GenerateAsync(user, cancellationToken);
+            // 4. Generate the new access token using the loaded authorization data
+            var accessTokenResult = jwtTokenProvider.Generate(user, roles, permissions);
 
-            // 4. Create a new refresh token. => return newRefreshTokenResult.Entity.TokenHash &&newRefreshTokenResult.PlainTextToken
+            // 5. Create a new refresh token. => return newRefreshTokenResult.Entity.TokenHash &&newRefreshTokenResult.PlainTextToken
 
-            var newRefreshTokenResult = await refreshTokenService.CreateAsync(user, cancellationToken);
+            var newRefreshTokenResult =  refreshTokenService.Create(user);
 
-            // 5. Revoke the old refresh token
-            //    and link it to the replacement token.
-
-            await refreshTokenService.RevokeAsync(
+            // 6.Revoke the old refresh token and link it to the replacement
+            refreshTokenService.Revoke(
                 existingRefreshToken,
-                newRefreshTokenResult.Entity.TokenHash,
-                cancellationToken);
+                newRefreshTokenResult.Entity.TokenHash);
 
-            // 6. Persist both changes:
-            //    - old token becomes revoked
-            //    - new token is inserted
+            /* 7. Persist refresh token rotation:
+                - old token becomes revoked
+               - new token is inserted */
 
             await context.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation(
                 "Refresh token rotated successfully for user {UserId}",
                 user.Id);
-
-            // 7. Get user's roles and permissions for the response.
-
-            var roles = await userManager.GetRolesAsync(user);
-            var permissions = await GetPermissionsAsync(roles);
 
             return new AuthenticationResponse(
                 user.Id,
@@ -300,7 +279,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
             if (refreshToken is not null)
             {
                 //Revoke the refresh token:
-                await refreshTokenService.RevokeAsync(refreshToken, cancellationToken: cancellationToken);
+                 refreshTokenService.Revoke(refreshToken);
                 await context.SaveChangesAsync(cancellationToken);
 
                 logger.LogInformation(
@@ -497,14 +476,11 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
             ApplicationUser user,
             CancellationToken cancellationToken) 
         {
-            var accessToken = await jwtTokenProvider.GenerateAsync(user, cancellationToken);
-
-          var refreshTokenResult =  await refreshTokenService.CreateAsync(user, cancellationToken);
-            var roles = await userManager.GetRolesAsync(user);
+            var roles=await userManager.GetRolesAsync(user);
             var permissions = await GetPermissionsAsync(roles);
-
+            var accessToken=jwtTokenProvider.Generate(user,roles, permissions);
+            var refreshTokenResult = refreshTokenService.Create(user);
             await context.SaveChangesAsync(cancellationToken);
-
 
             return new AuthenticationResponse(
                 user.Id,
@@ -516,14 +492,10 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
                 accessToken.AccessToken,
                 accessToken.AccessTokenExpiresAtUtc,
                 refreshTokenResult.PlainTextToken, refreshTokenResult.Entity.ExpiresAtUtc);
-
-
-
         }
 
 
-        private async Task<HashSet<string>> GetPermissionsAsync(
-    IEnumerable<string> roleNames)
+        private async Task<HashSet<string>> GetPermissionsAsync(IEnumerable<string> roleNames)
         {
             var permissions = new HashSet<string>();
 

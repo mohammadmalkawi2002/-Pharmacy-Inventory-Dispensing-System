@@ -12,7 +12,6 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
     {
         private ClaimsPrincipal? User => httpContextAccessor.HttpContext?.User;
         public string? Id => User?.FindFirstValue(ClaimTypes.NameIdentifier);
-
         public string? Email => User?.FindFirstValue(ClaimTypes.Email);
 
         public bool IsAuthenticated => User?.Identity?.IsAuthenticated==true;
@@ -24,6 +23,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity
         public IReadOnlyCollection<string> Permissions => User?.FindAll(ApplicationClaimTypes.Permission)
                                                             .Select(claim=>claim.Value)
                                                                 .ToArray()??[];
+
 
         public bool IsInRole(string role)
        => User?.IsInRole(role) == true;

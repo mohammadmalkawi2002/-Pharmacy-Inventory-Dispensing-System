@@ -19,7 +19,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.OpenApi.Transformers
               "success": false,
               "message": "string",
               "errors": {},
-              "traceId": "string"
+              "correlationId": "string"
                  }
               """);
             }

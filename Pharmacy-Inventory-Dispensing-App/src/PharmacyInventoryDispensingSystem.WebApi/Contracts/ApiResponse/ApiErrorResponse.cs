@@ -4,7 +4,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Contracts.ApiResponse
      bool Success,
     string Message,
     object? Errors,
-    string? TraceId);
+    string? CorrelationId);
     
     
 }
