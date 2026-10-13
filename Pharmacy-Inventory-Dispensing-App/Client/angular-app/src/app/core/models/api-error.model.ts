@@ -7,7 +7,7 @@ export interface ApiErrorResponse {
   success: boolean;
   message: string;
   errors?: Record<string, string[]>;
-  traceId?: string;
+  correlationId?: string;
 }
 
 /**

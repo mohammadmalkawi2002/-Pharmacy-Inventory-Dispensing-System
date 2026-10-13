@@ -3,13 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PharmacyInventoryDispensingSystem.Application.Common.Interfaces.Repositories;
-using PharmacyInventoryDispensingSystem.Domain.Entities.Prescriptions;
 using PharmacyInventoryDispensingSystem.Domain.Enums;
 using PharmacyInventoryDispensingSystem.Infrastructure.Persistence.Context;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace PharmacyInventoryDispensingSystem.Infrastructure.BackgroundJobs
 {

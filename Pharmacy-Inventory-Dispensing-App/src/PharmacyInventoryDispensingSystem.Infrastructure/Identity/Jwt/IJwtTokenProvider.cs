@@ -6,6 +6,6 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity.Jwt
 {
     public interface IJwtTokenProvider
     {
-        Task<TokenResult> GenerateAsync(ApplicationUser user,CancellationToken cancellationToken=default);
+       TokenResult Generate(ApplicationUser user,IEnumerable<string> roles,IEnumerable<string> permissions);
     }
 }

@@ -13,13 +13,8 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity.RefreshToken
 
         Task<RefreshToken?> GetActiveTokenAsync(string token,
                                                 CancellationToken cancellationToken = default);
-
-        Task<RefreshTokenResult> CreateAsync(ApplicationUser user,
-                                       CancellationToken cancellationToken = default);
-
-
-        Task RevokeAsync(RefreshToken refreshToken,
-                         string? replacedByTokenHash = null,
-                         CancellationToken cancellationToken = default);
+        RefreshTokenResult Create(ApplicationUser user);
+        void Revoke(RefreshToken refreshToken,
+                         string? replacedByTokenHash = null);
     }
 }

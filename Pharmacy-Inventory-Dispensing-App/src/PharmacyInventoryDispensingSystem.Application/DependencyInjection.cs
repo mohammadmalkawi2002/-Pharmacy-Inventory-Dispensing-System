@@ -17,8 +17,11 @@ namespace PharmacyInventoryDispensingSystem.Application
             services.AddMediatR(cfg =>
             {
                 cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+                cfg.AddOpenRequestPreProcessor(
+                        typeof(LoggingBehaviour<>));
+
                 cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-              
+                cfg.AddOpenBehavior(typeof(PerformanceBehaviour<,>));
                 cfg.AddOpenBehavior(typeof(UnhandledExceptionBehavior<,>));
                
             });

@@ -44,7 +44,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
                 Success: false,
                 Message: error.Description,
                 Errors: errors,
-                TraceId: HttpContext.TraceIdentifier);
+                CorrelationId: HttpContext.TraceIdentifier);
 
             return StatusCode(statusCode, response);
         }
@@ -63,7 +63,7 @@ namespace PharmacyInventoryDispensingSystem.WebApi.Controllers
                 Success: false,
                 Message: "Validation failed",
                 Errors: errorsDictionary,
-                TraceId: HttpContext.TraceIdentifier);
+                CorrelationId: HttpContext.TraceIdentifier);
 
             return BadRequest(response);
         }

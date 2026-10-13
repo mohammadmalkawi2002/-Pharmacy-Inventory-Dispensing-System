@@ -151,6 +151,7 @@ export class PrescriptionsListComponent implements OnInit {
           const anchor = document.createElement('a');
           anchor.href = url;
           anchor.download = `Prescription-${prescription.prescriptionNumber}.pdf`;
+          anchor.target = '_blank';
           anchor.click();
           URL.revokeObjectURL(url);
         }

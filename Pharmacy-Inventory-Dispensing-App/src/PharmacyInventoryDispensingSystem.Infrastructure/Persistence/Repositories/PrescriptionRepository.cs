@@ -11,9 +11,11 @@ public class PrescriptionRepository(AppDbContext context)
 {
     public async Task<string> GenerateNextPrescriptionNumberAsync(CancellationToken cancellationToken = default)
     {
-        int sequenceValue = await DbContext.Database
-            .SqlQuery<int>($"SELECT NEXT VALUE FOR PrescriptionNumberSequence AS Value")
-            .SingleAsync(cancellationToken);
+        var values = await DbContext.Database
+       .SqlQuery<int>($"SELECT NEXT VALUE FOR PrescriptionNumberSequence AS Value")
+       .ToListAsync(cancellationToken);
+
+        int sequenceValue = values.Single();
 
         return $"RX-{sequenceValue:D6}";
     }

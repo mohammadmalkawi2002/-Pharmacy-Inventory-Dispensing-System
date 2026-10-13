@@ -67,7 +67,7 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity.RefreshToken
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
 
-        public async Task<RefreshTokenResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken = default)
+        public RefreshTokenResult Create(ApplicationUser user)
         {
             //This is actual token as A PlainText must return to the client:
             var plainTextToken = GenerateRefreshToken();
@@ -80,19 +80,17 @@ namespace PharmacyInventoryDispensingSystem.Infrastructure.Identity.RefreshToken
                   
             };
 
-            await context.RefreshTokens.AddAsync(refreshToken, cancellationToken);
+             context.RefreshTokens.Add(refreshToken);
 
             return new RefreshTokenResult(refreshToken, plainTextToken);
           
         }
 
       
-        public Task RevokeAsync(RefreshToken refreshToken, string? replacedByTokenHash = null, CancellationToken cancellationToken = default)
+        public void Revoke(RefreshToken refreshToken, string? replacedByTokenHash = null)
         {
             refreshToken.RevokedAtUtc = DateTimeOffset.UtcNow;
             refreshToken.ReplacedByTokenHash = replacedByTokenHash;
-
-            return Task.CompletedTask;
         }
     }
 }
